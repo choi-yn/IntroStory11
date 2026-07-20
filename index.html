@@ -33,6 +33,8 @@
       background-repeat: no-repeat;
       /* 배경 이미지는 원본 그대로 (채도·명암 보정/크로스페이드 없음) */
       overflow: hidden;
+      container-type: size;
+      container-name: stage;
     }
 
     .flash-overlay {
@@ -348,15 +350,16 @@
       display: flex;
     }
     #mission-card {
-      width: min(86%, 1100px);
-      max-height: 88%;
-      border-radius: 18px;
+      width: 94%;
+      max-width: none;
+      max-height: 94%;
+      border-radius: 14px;
       overflow: hidden;
       box-shadow:
         0 12px 40px rgba(0, 0, 0, 0.45),
         0 0 0 4px rgba(255, 255, 255, 0.55);
       opacity: 0;
-      transform: scale(0.86) translateY(18px);
+      transform: scale(0.92) translateY(12px);
       transition: opacity 0.45s ease, transform 0.45s ease;
       background: #fff;
     }
@@ -368,7 +371,7 @@
       display: block;
       width: 100%;
       height: auto;
-      max-height: 88vh;
+      max-height: 92cqh;
       object-fit: contain;
       background: #fff;
     }
@@ -451,39 +454,33 @@
     #confetti {
       position: absolute;
       inset: 0;
-      z-index: 45;
+      z-index: 80;
       pointer-events: none;
       overflow: hidden;
     }
     .confetti-piece {
       position: absolute;
-      top: -12%;
-      left: var(--x, 50%);
-      width: var(--w, 8px);
-      height: var(--h, 12px);
-      background: var(--color, #FF6B6B);
-      opacity: 0.95;
-      border-radius: 1px;
-      animation: confetti-fall var(--dur, 4s) linear forwards;
-      animation-delay: var(--delay, 0s);
-      transform: rotate(var(--rot, 0deg));
+      top: -8%;
+      left: 50%;
+      width: 16px;
+      height: 20px;
+      background: #FF6B6B;
+      opacity: 1;
+      border-radius: 2px;
+      animation-name: confetti-fall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
     }
     .confetti-piece.round {
       border-radius: 50%;
     }
-    .confetti-piece.strip {
-      width: var(--w, 4px);
-      height: var(--h, 14px);
-      border-radius: 2px;
-    }
     @keyframes confetti-fall {
       0% {
         transform: translate3d(0, 0, 0) rotate(0deg);
-        opacity: 0;
+        opacity: 1;
       }
-      8% { opacity: 1; }
       100% {
-        transform: translate3d(var(--drift, 40px), 120vh, 0) rotate(var(--spin, 720deg));
+        transform: translate3d(var(--drift, 30px), var(--fall, 900px), 0) rotate(var(--spin, 720deg));
         opacity: 0.85;
       }
     }
@@ -501,6 +498,56 @@
     @keyframes ending-bounce {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-10px); }
+    }
+
+    /* 시작 버튼 (오디오 잠금 해제용) */
+    #start-gate {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(20, 28, 24, 0.42);
+      -webkit-tap-highlight-color: transparent;
+    }
+    #start-gate.hidden {
+      display: none;
+    }
+    #start-btn {
+      appearance: none;
+      border: 3px solid #fff;
+      cursor: pointer;
+      color: #2d5a3d;
+      font-size: clamp(18px, 3.6vmin, 28px);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 0.55em 1.4em 0.6em;
+      border-radius: 999px;
+      background: linear-gradient(165deg, #E8F9C8 0%, #B8E986 45%, #8FD460 100%);
+      box-shadow:
+        0 0 0 3px rgba(100, 170, 70, 0.35),
+        0 6px 0 #5FA83A,
+        0 10px 22px rgba(40, 90, 30, 0.25);
+      transform-origin: center bottom;
+      animation: start-btn-bounce 1.4s ease-in-out infinite;
+    }
+    #start-btn::before {
+      content: '▶ ';
+      font-size: 0.78em;
+      vertical-align: 0.05em;
+    }
+    #start-btn:active {
+      animation: none;
+      transform: translateY(4px);
+      box-shadow:
+        0 0 0 3px rgba(100, 170, 70, 0.3),
+        0 2px 0 #5FA83A,
+        0 4px 12px rgba(40, 90, 30, 0.2);
+    }
+    @keyframes start-btn-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
     }
   </style>
 </head>
@@ -542,6 +589,9 @@
   </div>
   <div id="whiteout" aria-hidden="true"></div>
   <div id="confetti" aria-hidden="true"></div>
+  <div id="start-gate" aria-hidden="false">
+    <button type="button" id="start-btn" aria-label="시작">시작!</button>
+  </div>
 </div>
 
 <script>
@@ -628,6 +678,134 @@
     img.src = src;
   });
 
+  // 앱인벤터/태블릿: HTML Audio는 첫 터치 이후 재생이 막히므로 Web Audio로 통일
+  const ALL_STORY_AUDIO = [
+    "sound/audio_뚱뚱유아_대사1.mp3",
+    "sound/audio_장난감유아_대사1.mp3",
+    "sound/audio_배아픈유아_대사1.mp3",
+    "sound/audio_헬씨_대사1.mp3",
+    "sound/audio_에티_대사1.mp3",
+    "sound/audio_세이피_대사1.mp3",
+    "sound/audio_헬씨_대사2.mp3",
+    "sound/audio_에티_대사2.mp3",
+    "sound/audio_세이피_대사2.mp3",
+    "sound/audio_헬씨_대사3.mp3",
+    "sound/audio_에티_대사3.mp3",
+    "sound/audio_세이피_대사3.mp3",
+    "sound/Ascending 3.mp3",
+    "sound/영양미션완성.mp3",
+    "sound/sfx/applause.mp3",
+    "sound/sfx/mission_pop.ogg"
+  ];
+  let audioCtx = null;
+  const audioBufferCache = new Map();
+  let activeBufferSources = [];
+  let loopingSources = [];
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    return audioCtx;
+  }
+
+  function unlockAudioContext() {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') {
+      return ctx.resume().catch(() => {});
+    }
+    return Promise.resolve();
+  }
+
+  function preloadAudioBuffers(list) {
+    const srcs = list || ALL_STORY_AUDIO;
+    return Promise.all(srcs.map(src =>
+      loadAudioBuffer(src).catch(err => {
+        console.warn('Audio buffer preload failed:', src, err);
+        return null;
+      })
+    ));
+  }
+
+  function loadAudioBuffer(src) {
+    if (audioBufferCache.has(src)) {
+      return Promise.resolve(audioBufferCache.get(src));
+    }
+    const ctx = getAudioCtx();
+    return fetch(encodeURI(src))
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.arrayBuffer();
+      })
+      .then(buf => ctx.decodeAudioData(buf.slice(0)))
+      .then(decoded => {
+        audioBufferCache.set(src, decoded);
+        return decoded;
+      });
+  }
+
+  function stopBufferSources(list) {
+    (list || []).forEach(src => {
+      try { src.stop(); } catch (e) {}
+    });
+  }
+
+  /** Web Audio 단건 재생 (태블릿에서도 연속 재생 가능) */
+  function playBuffer(src, onDone, opts) {
+    const volume = opts && opts.volume != null ? opts.volume : 1;
+    const loop = !!(opts && opts.loop);
+    return unlockAudioContext()
+      .then(() => loadAudioBuffer(src))
+      .then(buffer => {
+        const ctx = getAudioCtx();
+        if (!(opts && opts.overlap)) {
+          stopBufferSources(activeBufferSources);
+          activeBufferSources = [];
+        }
+        const source = ctx.createBufferSource();
+        const gain = ctx.createGain();
+        gain.gain.value = volume;
+        source.buffer = buffer;
+        source.loop = loop;
+        source.connect(gain);
+        gain.connect(ctx.destination);
+
+        let finished = false;
+        const done = () => {
+          if (finished) return;
+          finished = true;
+          if (typeof onDone === 'function') onDone();
+        };
+
+        source.onended = () => {
+          if (!loop) done();
+        };
+        source.start();
+        if (loop) {
+          loopingSources.push(source);
+        } else {
+          activeBufferSources.push(source);
+          setTimeout(done, Math.ceil((buffer.duration || 1) * 1000) + 250);
+        }
+        return source;
+      })
+      .catch(err => {
+        console.warn('playBuffer failed:', src, err);
+        if (typeof onDone === 'function') {
+          setTimeout(onDone, 1200);
+        }
+        return null;
+      });
+  }
+
+  function stopLoopingAudio() {
+    stopBufferSources(loopingSources);
+    loopingSources = [];
+  }
+
+  preloadAudioBuffers();
+
   const timeline = [
     {
       bg: BG_DARK,
@@ -676,7 +854,6 @@
       sfx: "sound/Ascending 3.mp3",
       audioList: [
         "sound/audio_헬씨_대사1.mp3",
-        "sound/audio_에티_대사1.mp3",
         "sound/audio_세이피_대사1.mp3"
       ],
       lipSyncGroup: HERO_LIP_GROUP,
@@ -714,13 +891,12 @@
       lipInterval: 360,
       lipReset: "image/세이피.png" + LIP_CACHE
     },
-    // 마지막: 셋이 대사2처럼 입모양 전환 + 대사3 동시 재생
+    // 마지막: 셋이 대사3 동시 재생 + 입모양
     {
       bg: BG_DARK,
       show: [...kids, ...heroes],
       audioList: [
         "sound/audio_헬씨_대사3.mp3",
-        "sound/audio_에티_대사3.mp3",
         "sound/audio_세이피_대사3.mp3"
       ],
       lipSyncGroup: HERO_LIP_GROUP,
@@ -835,6 +1011,9 @@
       a.onerror = null;
     });
     activeAudios = [];
+    stopBufferSources(activeBufferSources);
+    activeBufferSources = [];
+    stopLoopingAudio();
   }
 
   const missionOverlay = document.getElementById('mission-overlay');
@@ -844,9 +1023,7 @@
   const confettiEl = document.getElementById('confetti');
 
   function playMissionSfx(src) {
-    const sfx = new Audio(src);
-    sfx.volume = 0.55;
-    sfx.play().catch(() => {});
+    playBuffer(src, null, { volume: 0.55, overlap: true });
   }
 
   function applyEndingCast() {
@@ -881,34 +1058,52 @@
   let confettiTimer = null;
 
   function spawnConfettiPiece() {
+    if (!confettiEl) return;
+    const stageH = Math.max((stage && stage.clientHeight) || 0, window.innerHeight * 0.5, 400);
+    const stageW = Math.max((stage && stage.clientWidth) || 0, window.innerWidth * 0.5, 600);
     const colors = ['#FF6B6B', '#FFD15C', '#7CFFB2', '#7AB8FF', '#FF9AD5', '#B388FF', '#FF8A5B', '#FFF3A0'];
     const p = document.createElement('span');
     const kind = Math.random();
-    p.className = 'confetti-piece' + (kind < 0.33 ? ' round' : kind < 0.66 ? ' strip' : '');
-    p.style.setProperty('--x', (Math.random() * 100).toFixed(1) + '%');
-    p.style.setProperty('--color', colors[Math.floor(Math.random() * colors.length)]);
-    p.style.setProperty('--w', (5 + Math.random() * 8).toFixed(1) + 'px');
-    p.style.setProperty('--h', (7 + Math.random() * 10).toFixed(1) + 'px');
-    p.style.setProperty('--dur', (3.2 + Math.random() * 2.8).toFixed(2) + 's');
-    p.style.setProperty('--delay', (Math.random() * 0.2).toFixed(2) + 's');
-    p.style.setProperty('--drift', ((Math.random() - 0.5) * 160).toFixed(1) + 'px');
-    p.style.setProperty('--spin', ((Math.random() > 0.5 ? 1 : -1) * (420 + Math.random() * 520)).toFixed(0) + 'deg');
-    p.style.setProperty('--rot', (Math.random() * 360).toFixed(0) + 'deg');
+    const w = 10 + Math.random() * 16;
+    const h = kind < 0.5 ? (8 + Math.random() * 12) : (16 + Math.random() * 18);
+    p.className = 'confetti-piece' + (kind < 0.4 ? ' round' : '');
+    p.style.left = (Math.random() * 100).toFixed(1) + '%';
+    p.style.top = (-8 - Math.random() * 12).toFixed(1) + '%';
+    p.style.width = w.toFixed(0) + 'px';
+    p.style.height = h.toFixed(0) + 'px';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.setProperty('--drift', ((Math.random() - 0.5) * stageW * 0.35).toFixed(0) + 'px');
+    p.style.setProperty('--fall', (stageH * (1.15 + Math.random() * 0.25)).toFixed(0) + 'px');
+    p.style.setProperty('--spin', ((Math.random() > 0.5 ? 1 : -1) * (480 + Math.random() * 600)).toFixed(0) + 'deg');
+    p.style.animationDuration = (3 + Math.random() * 2.5).toFixed(2) + 's';
+    p.style.animationDelay = (Math.random() * 0.2).toFixed(2) + 's';
     confettiEl.appendChild(p);
     setTimeout(() => {
       if (p.parentNode) p.parentNode.removeChild(p);
-    }, 6500);
+    }, 8000);
   }
 
-  function startConfetti() {
-    if (confettiTimer) return;
+  function startConfetti(force) {
+    if (confettiTimer && !force) return;
+    if (confettiTimer) {
+      clearInterval(confettiTimer);
+      confettiTimer = null;
+    }
+    if (!confettiEl) return;
     confettiEl.innerHTML = '';
-    for (let i = 0; i < 12; i++) spawnConfettiPiece();
-    // 스토리 종료 후에도 계속 뿌리기 (양은 적게)
+    confettiEl.setAttribute('aria-hidden', 'false');
+    confettiEl.style.display = 'block';
+    confettiEl.style.zIndex = '80';
+    for (let i = 0; i < 28; i++) spawnConfettiPiece();
     confettiTimer = setInterval(() => {
       spawnConfettiPiece();
-      if (Math.random() > 0.45) spawnConfettiPiece();
-    }, 320);
+      spawnConfettiPiece();
+      if (Math.random() > 0.25) spawnConfettiPiece();
+    }, 220);
+  }
+
+  function ensureConfetti() {
+    if (!confettiTimer) startConfetti(true);
   }
 
   function playEndingFinale(onDone) {
@@ -935,13 +1130,14 @@
       missionImage.removeAttribute('src');
     });
 
-    // 화이트가 걷히며 밝은교실 + Ascending
+    // 화이트가 걷히며 밝은교실 + Ascending + 박수(배경 5초)
     later(2800, () => {
       whiteoutEl.classList.add('reveal');
       whiteoutEl.classList.remove('active');
-      const ascend = new Audio("sound/Ascending 3.mp3");
-      ascend.volume = 0.7;
-      ascend.play().catch(() => {});
+      ensureConfetti();
+      playBuffer("sound/Ascending 3.mp3", null, { volume: 0.7, overlap: true });
+      playBuffer("sound/sfx/applause.mp3", null, { volume: 0.5, loop: true, overlap: true });
+      later(5000, () => stopLoopingAudio());
     });
 
     later(4600, () => {
@@ -1000,10 +1196,8 @@
             missionOverlay.classList.add('expanding');
             missionCard.classList.remove('expand-fill');
             missionCard.classList.add('grow-from-tiny', 'show');
-            startConfetti();
-            const clap = new Audio("sound/sfx/applause.mp3");
-            clap.volume = 0.75;
-            clap.play().catch(() => {});
+            startConfetti(true);
+            playBuffer("sound/sfx/applause.mp3", null, { volume: 0.75, overlap: true });
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 missionCard.classList.remove('grow-from-tiny');
@@ -1044,7 +1238,8 @@
   }
 
   function finishStory() {
-    // 종이가루(confettiTimer)는 끄지 않고 계속 유지
+    // 종이가루는 미션7부터 계속 유지 (clearTimers로 끄지 않음)
+    ensureConfetti();
     clearTimers();
     clearSpeaking();
     setTimeout(() => {
@@ -1055,57 +1250,62 @@
   }
 
   function playSingleAudio(src, onDone) {
-    const audio = new Audio(src);
-    currentAudio = audio;
-    activeAudios = [audio];
-
-    const done = () => {
-      if (currentAudio === audio) currentAudio = null;
-      onDone();
-    };
-
-    audio.onended = done;
-    audio.onerror = () => {
-      console.warn("Audio load/play failed:", src);
-      later(2000, done);
-    };
-    audio.play().catch(e => {
-      console.warn("Audio Play Error:", e);
-      later(2000, done);
-    });
+    currentAudio = null;
+    activeAudios = [];
+    playBuffer(src, onDone, { volume: 1, overlap: false });
   }
 
   function playDialogueList(srcs, onDone) {
-    const list = srcs.map(src => new Audio(src));
-    activeAudios = list;
-    currentAudio = list[0] || null;
+    if (!srcs || !srcs.length) {
+      onDone();
+      return;
+    }
 
-    let remaining = list.length;
-    let finished = false;
+    unlockAudioContext().then(() => {
+      return Promise.all(srcs.map(src => loadAudioBuffer(src).catch(err => {
+        console.warn('Group audio decode failed:', src, err);
+        return null;
+      }))).then(buffers => {
+        const valid = buffers.filter(Boolean);
+        if (!valid.length) {
+          onDone();
+          return;
+        }
 
-    const oneDone = () => {
-      remaining -= 1;
-      if (remaining <= 0 && !finished) {
-        finished = true;
-        currentAudio = null;
-        activeAudios = [];
-        onDone();
-      }
-    };
+        const ctx = getAudioCtx();
+        stopBufferSources(activeBufferSources);
+        activeBufferSources = [];
 
-    list.forEach(audio => {
-      audio.onended = oneDone;
-      audio.onerror = () => {
-        console.warn("Audio load/play failed:", audio.src);
-        oneDone();
-      };
-      audio.play().catch(e => {
-        console.warn("Audio Play Error:", e);
-        oneDone();
+        const startAt = ctx.currentTime + 0.03;
+        let ended = 0;
+        let finished = false;
+        const maxDur = Math.max(...valid.map(b => b.duration || 0));
+
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          activeBufferSources = [];
+          onDone();
+        };
+
+        valid.forEach(buffer => {
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.onended = () => {
+            ended += 1;
+            if (ended >= valid.length) finish();
+          };
+          source.start(startAt);
+          activeBufferSources.push(source);
+        });
+
+        setTimeout(finish, Math.ceil(maxDur * 1000) + 400);
       });
+    }).catch(err => {
+      console.warn('playDialogueList failed:', err);
+      onDone();
     });
-
-    if (list.length === 0) onDone();
   }
 
   // 히어로 등장 별가루 — 앞에 덮고, 뒤에서 줌아웃
@@ -1307,19 +1507,7 @@
       };
 
       if (step.sfx) {
-        const sfx = new Audio(step.sfx);
-        currentAudio = sfx;
-        activeAudios = [sfx];
-
-        sfx.onended = playGroupAudio;
-        sfx.onerror = () => {
-          console.warn("SFX load/play failed:", step.sfx);
-          playGroupAudio();
-        };
-        sfx.play().catch(e => {
-          console.warn("SFX Play Error:", e);
-          playGroupAudio();
-        });
+        playBuffer(step.sfx, playGroupAudio, { volume: 0.85, overlap: false });
       } else {
         playGroupAudio();
       }
@@ -1369,8 +1557,47 @@
     });
   }
 
-  // 시작: 세 유아 나란히 보이는 상태에서 스토리 시작
-  playStep(0);
+  // 시작 버튼: 터치로 오디오 잠금 해제 후 스토리 시작
+  const startGate = document.getElementById('start-gate');
+  const startBtn = document.getElementById('start-btn');
+
+  function unlockAudioThenStart() {
+    if (startGate) {
+      startGate.classList.add('hidden');
+      startGate.setAttribute('aria-hidden', 'true');
+    }
+    // 시작 터치에서 AudioContext를 깨워야 이후 대사가 연속 재생됨
+    unlockAudioContext()
+      .then(() => {
+        const ctx = getAudioCtx();
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+        preloadAudioBuffers(); // 백그라운드 프리로드
+        playStep(0);
+      })
+      .catch(() => playStep(0));
+  }
+
+  if (startBtn) {
+    const onStart = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startBtn.removeEventListener('pointerdown', onStart);
+      startBtn.removeEventListener('touchstart', onStart);
+      startBtn.removeEventListener('click', onStart);
+      unlockAudioThenStart();
+    };
+    startBtn.addEventListener('pointerdown', onStart, { once: true });
+    startBtn.addEventListener('touchstart', onStart, { once: true, passive: false });
+    startBtn.addEventListener('click', onStart, { once: true });
+  } else if (startGate) {
+    startGate.addEventListener('click', unlockAudioThenStart, { once: true });
+  } else {
+    playStep(0);
+  }
 </script>
 </body>
 </html>

@@ -2,153 +2,1375 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>영양놀이 오프닝 스토리</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UDL 영양교육 인트로 스토리</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #F3F6F4;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    #story-stage {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw;
+      max-height: 100vh;
+      max-width: 177.78vh;
+      margin: auto;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #F3F6F4;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      /* 배경 이미지는 원본 그대로 (채도·명암 보정/크로스페이드 없음) */
+      overflow: hidden;
+    }
+
+    .flash-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 99;
+    }
+    .flash-active {
+      animation: flash-anim 0.8s ease-out;
+    }
+    @keyframes flash-anim {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* 캐릭터 슬롯 (그림자 + 이미지) */
+    .char-slot {
+      position: absolute;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform 1.2s ease,
+        opacity 0.7s ease,
+        bottom 1.2s ease,
+        width 1s ease,
+        height 1s ease;
+      z-index: 5;
+      transform-origin: bottom center;
+    }
+    .char-slot.visible {
+      opacity: 1;
+    }
+
+    /* 나란히 서 있는 기본(뒤) 위치 */
+    .char-slot.child {
+      bottom: 10%;
+      width: 16%;
+      height: 42%;
+      z-index: 5;
+    }
+
+    /* 뚱뚱유아·장난감유아: 동일 높이 */
+    #slot-child-fat,
+    #slot-child-toy {
+      height: 42%;
+      width: 16%;
+      overflow: visible;
+    }
+    #slot-child-fat .character,
+    #slot-child-toy .character {
+      height: 100%;
+      width: auto;
+      max-width: none;
+      object-fit: contain;
+      object-position: bottom center;
+      transform-origin: bottom center;
+    }
+    /* 장난감유아·1·2: 살짝 크게 (놀란 이미지도 동일 슬롯) */
+    #slot-child-toy .character {
+      height: 106%;
+    }
+    #slot-child-sick .character {
+      height: 100%;
+      width: auto;
+      max-width: none;
+      object-fit: contain;
+      object-position: bottom center;
+    }
+
+    /* 대사 중: 앞으로 살짝 */
+    .char-slot.speaking {
+      transform: translateY(3%) scale(1.04);
+      bottom: 7.5%;
+      z-index: 20;
+    }
+
+    /* 뚱뚱유아·장난감유아 말할 때: 발 고정, 몸만 부드럽게 살짝 흔들림 */
+    #slot-child-fat.speaking .character,
+    #slot-child-toy.speaking .character {
+      transform-origin: bottom center;
+      animation: talk-sway 1.45s ease-in-out infinite;
+    }
+    @keyframes talk-sway {
+      0%, 100% {
+        transform: rotate(0deg) translateY(0);
+      }
+      35% {
+        transform: rotate(-1.1deg) translateY(-1.2%);
+      }
+      70% {
+        transform: rotate(0.9deg) translateY(-0.4%);
+      }
+    }
+
+    .foot-shadow {
+      position: absolute;
+      bottom: 1%;
+      left: 28%;
+      width: 58%;
+      height: 10%;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(0, 0, 0, 0.42) 0%,
+        rgba(0, 0, 0, 0.18) 45%,
+        transparent 72%
+      );
+      transform: translateX(-18%) skewX(-28deg);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 배아픈유아 그림자 조금 더 크게 */
+    #slot-child-sick .foot-shadow {
+      width: 78%;
+      height: 15%;
+      bottom: 0;
+      left: 22%;
+      opacity: 0.95;
+    }
+
+    .character {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      width: 100%;
+      object-fit: contain;
+      object-position: bottom center;
+      display: block;
+    }
+
+    /* 유아 나란히 (사이 공간에 히어로 등장) */
+    #slot-child-fat  { left: 4%; }
+    #slot-child-toy  { left: 36%; }
+    #slot-child-sick { left: 68%; }
+
+    /* 히어로: 유아와 같은 라인에 등장, 사이사이 배치 */
+    .char-slot.hero {
+      bottom: 10%;
+      width: 15%;
+      height: 44%;
+      z-index: 12;
+      transition:
+        transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1),
+        opacity 0.7s ease,
+        bottom 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    #slot-hero-healthy { left: 20%; }
+    #slot-hero-eti     { left: 53%; width: 13%; height: 39%; }
+    #slot-hero-safey   { left: 82%; width: 17%; height: 48%; }
+
+    /* 점프하며 살짝만 나오기 (미끄러짐 최소화) */
+    .char-slot.hero.step-forward {
+      bottom: 8.5%;
+      transform: translateY(2%) scale(1.03);
+      z-index: 22;
+    }
+
+    /* 한 번 점프하며 나오기/들어가기 */
+    .char-slot.hero.walking .character {
+      transform-origin: bottom center;
+      animation: walk-bounce 0.65s ease-in-out 1;
+    }
+    @keyframes walk-bounce {
+      0% { transform: translateY(0) scale(1, 1); }
+      35% { transform: translateY(-16%) scale(0.96, 1.09); }
+      70% { transform: translateY(0) scale(1.05, 0.93); }
+      100% { transform: translateY(0) scale(1, 1); }
+    }
+
+    /* 히어로 등장 별가루 — 캐릭터 앞에 덮어 두고, 뒤에서 줌아웃 */
+    .sparkle-burst {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 20;
+      overflow: visible;
+      transition: opacity 0.85s ease-out;
+    }
+    .sparkle-burst.fading {
+      opacity: 0;
+    }
+    .sparkle-silhouette {
+      position: absolute;
+      left: 10%;
+      top: 2%;
+      width: 80%;
+      height: 94%;
+      border-radius: 48% 48% 42% 42%;
+      background: radial-gradient(
+        ellipse at 50% 42%,
+        rgba(255, 245, 170, 0.7) 0%,
+        rgba(255, 215, 100, 0.38) 36%,
+        rgba(255, 190, 70, 0.12) 58%,
+        transparent 76%
+      );
+      filter: blur(2.5px);
+      animation: silhouette-pulse 1.1s ease-in-out infinite;
+    }
+    @keyframes silhouette-pulse {
+      0%, 100% { opacity: 0.65; transform: scale(0.97); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    .sparkle {
+      position: absolute;
+      left: var(--x, 50%);
+      top: var(--y, 50%);
+      width: var(--size, 7px);
+      height: var(--size, 7px);
+      margin-left: calc(var(--size, 7px) / -2);
+      margin-top: calc(var(--size, 7px) / -2);
+      background: #FFE566;
+      box-shadow:
+        0 0 4px rgba(255, 255, 255, 0.95),
+        0 0 10px rgba(255, 209, 92, 0.9),
+        0 0 16px rgba(255, 180, 60, 0.55);
+      clip-path: polygon(
+        50% 0%, 63% 38%, 100% 38%, 69% 59%,
+        82% 100%, 50% 75%, 18% 100%, 31% 59%,
+        0% 38%, 37% 38%
+      );
+      opacity: 0;
+      animation: sparkle-twinkle 0.95s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    .sparkle.dot {
+      clip-path: none;
+      border-radius: 50%;
+      background: #FFF8D6;
+    }
+    @keyframes sparkle-twinkle {
+      0%, 100% {
+        opacity: 0.15;
+        transform: scale(0.45) rotate(0deg);
+      }
+      45% {
+        opacity: 1;
+        transform: scale(1.3) rotate(25deg);
+      }
+      70% {
+        opacity: 0.6;
+        transform: scale(0.85) rotate(10deg);
+      }
+    }
+
+    .char-slot.hero .character {
+      z-index: 2;
+    }
+    .char-slot.hero .foot-shadow {
+      z-index: 1;
+    }
+
+    /* 별가루만 먼저: 캐릭터·그림자 숨김 */
+    .char-slot.hero.pre-appear .character,
+    .char-slot.hero.pre-appear .foot-shadow {
+      opacity: 0;
+    }
+
+    /* 제자리에서 커지며 등장 */
+    .char-slot.hero.appearing .character {
+      animation: hero-grow-in 1.05s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      transform-origin: bottom center;
+    }
+    .char-slot.hero.appearing .foot-shadow {
+      animation: hero-shadow-in 1.05s ease-out both;
+    }
+    @keyframes hero-grow-in {
+      0% {
+        opacity: 0;
+        filter: brightness(1.7);
+        transform: scale(0.35);
+      }
+      55% {
+        opacity: 1;
+        filter: brightness(1.25);
+        transform: scale(1.06);
+      }
+      100% {
+        opacity: 1;
+        filter: brightness(1);
+        transform: scale(1);
+      }
+    }
+    @keyframes hero-shadow-in {
+      0% { opacity: 0; transform: translateX(-18%) skewX(-28deg) scale(0.35); }
+      55% { opacity: 1; transform: translateX(-18%) skewX(-28deg) scale(1.05); }
+      100% { opacity: 1; transform: translateX(-18%) skewX(-28deg) scale(1); }
+    }
+
+    /* 미션 활동 오버레이 */
+    #mission-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.28);
+      pointer-events: none;
+    }
+    #mission-overlay.active {
+      display: flex;
+    }
+    #mission-card {
+      width: min(86%, 1100px);
+      max-height: 88%;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.45),
+        0 0 0 4px rgba(255, 255, 255, 0.55);
+      opacity: 0;
+      transform: scale(0.86) translateY(18px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      background: #fff;
+    }
+    #mission-card.show {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    #mission-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 88vh;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    /* 미션7: 아주 작은 크기 → 화면 전체 */
+    #mission-overlay.expanding {
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.6s ease;
+    }
+    #mission-card.grow-from-tiny {
+      width: 6%;
+      max-width: none;
+      height: 6%;
+      max-height: none;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    #mission-card.expand-fill {
+      width: 100%;
+      max-width: none;
+      height: 100%;
+      max-height: none;
+      border-radius: 0;
+      box-shadow: none;
+      transform: none;
+      opacity: 1;
+      transition:
+        width 1.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+        height 1.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+        border-radius 1.25s ease;
+    }
+    #mission-card.expand-fill img,
+    #mission-card.grow-from-tiny img {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      object-fit: cover;
+    }
+    #mission-card.expand-fill img {
+      transition: filter 1.4s ease, opacity 1.4s ease;
+    }
+    #whiteout {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      background: #ffffff;
+      transition: opacity 1.65s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #whiteout.active {
+      opacity: 1;
+    }
+    #whiteout.reveal {
+      opacity: 0;
+      transition: opacity 1.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    /* 화이트아웃 위 빛 번짐 (순백) */
+    #whiteout::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 40%;
+      width: 140%;
+      height: 140%;
+      transform: translate(-50%, -50%) scale(0.4);
+      background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.7) 40%, transparent 70%);
+      opacity: 0;
+      transition: transform 1.7s ease, opacity 1.2s ease;
+    }
+    #whiteout.active::after {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    /* 알록달록 종이 가루 */
+    #confetti {
+      position: absolute;
+      inset: 0;
+      z-index: 45;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .confetti-piece {
+      position: absolute;
+      top: -12%;
+      left: var(--x, 50%);
+      width: var(--w, 8px);
+      height: var(--h, 12px);
+      background: var(--color, #FF6B6B);
+      opacity: 0.95;
+      border-radius: 1px;
+      animation: confetti-fall var(--dur, 4s) linear forwards;
+      animation-delay: var(--delay, 0s);
+      transform: rotate(var(--rot, 0deg));
+    }
+    .confetti-piece.round {
+      border-radius: 50%;
+    }
+    .confetti-piece.strip {
+      width: var(--w, 4px);
+      height: var(--h, 14px);
+      border-radius: 2px;
+    }
+    @keyframes confetti-fall {
+      0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+        opacity: 0;
+      }
+      8% { opacity: 1; }
+      100% {
+        transform: translate3d(var(--drift, 40px), 120vh, 0) rotate(var(--spin, 720deg));
+        opacity: 0.85;
+      }
+    }
+
+    /* 엔딩 바운스 (배아픈유아 변화 제외) */
+    .char-slot.ending-bounce .character {
+      transform-origin: bottom center;
+      animation: ending-bounce 1.15s ease-in-out infinite;
+    }
+    #slot-child-fat.ending-bounce .character { animation-delay: 0s; }
+    #slot-child-toy.ending-bounce .character { animation-delay: 0.12s; }
+    #slot-hero-healthy.ending-bounce .character { animation-delay: 0.05s; }
+    #slot-hero-eti.ending-bounce .character { animation-delay: 0.18s; }
+    #slot-hero-safey.ending-bounce .character { animation-delay: 0.08s; }
+    @keyframes ending-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  </style>
 </head>
 <body>
-  <div id="story-app" class="story-app">
 
-    <!-- 교실 배경 -->
-    <div class="bg-decor classroom-bg" aria-hidden="true">
-      <div class="classroom-frame">
-        <img class="classroom-bg-img" src="image/classroom_bg.png" alt="">
-      </div>
-    </div>
+<div id="story-stage" style="background-image: url('image/어두운교실.png');">
+  <div class="flash-overlay" id="flash"></div>
 
-    <!-- 씬 컨테이너 -->
-    <main id="scene-container" class="scene-container">
-
-      <!-- 1. 도입 + 캐릭터 등장 -->
-      <section class="scene scene-intro active" data-scene="intro">
-        <div class="scene-bg intro-bg"></div>
-        <div class="scene-content">
-          <div class="cast-scaler">
-          <div class="cast-stage">
-
-            <!-- 고민유아 -->
-            <div class="cast-member cast-child visible" data-cast="child">
-              <div class="q-mark-float" aria-hidden="true">
-                <img src="image/물음표.png" alt="" class="q-mark-img">
-              </div>
-              <img src="image/고민유아.png" alt="고민하는 유아" class="cast-img child-img">
-            </div>
-
-            <!-- 휠체어고민유아 (고민유아 오른쪽) -->
-            <div class="cast-member cast-wheelchair visible" data-cast="wheelchair">
-              <div class="q-mark-float" aria-hidden="true">
-                <img src="image/물음표.png" alt="" class="q-mark-img">
-              </div>
-              <img src="image/휠체어고민유아.png" alt="고민하는 휠체어 유아" class="cast-img child-img">
-            </div>
-
-            <!-- 헬씨 (고민유아 왼쪽) -->
-            <div class="cast-member cast-healthy" data-cast="healthy">
-              <img src="image/헬씨.png" alt="헬씨" class="cast-img">
-            </div>
-
-            <!-- 에티 (고민유아와 휠체어고민유아 사이) -->
-            <div class="cast-member cast-eti" data-cast="eti">
-              <img src="image/에티.png" alt="에티" class="cast-img">
-            </div>
-
-            <!-- 세이피 (휠체어고민유아 오른쪽) -->
-            <div class="cast-member cast-safy" data-cast="safy">
-              <img src="image/세이피.png" alt="세이피" class="cast-img">
-            </div>
-
-          </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 2. 앱 주요 화면 (활동1~7 교차 편집) -->
-      <section class="scene scene-activities" data-scene="activities">
-        <div class="scene-bg activities-bg"></div>
-        <div class="scene-content">
-          <div class="activities-scaler">
-          <div class="activity-frame">
-            <img id="activity-layer-a" class="activity-layer visible" src="image/활동1.jpg" alt="앱 활동 화면">
-            <img id="activity-layer-b" class="activity-layer" src="" alt="">
-          </div>
-          <div class="activity-dots">
-            <span class="dot active" data-index="0"></span>
-            <span class="dot" data-index="1"></span>
-            <span class="dot" data-index="2"></span>
-            <span class="dot" data-index="3"></span>
-            <span class="dot" data-index="4"></span>
-            <span class="dot" data-index="5"></span>
-            <span class="dot" data-index="6"></span>
-          </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 3. 엔딩 -->
-      <section class="scene scene-ending" data-scene="ending">
-        <div class="scene-bg ending-bg"></div>
-        <div class="scene-content">
-          <div class="ending-scaler">
-          <div class="ending-stage">
-          <div class="ending-group">
-            <div class="ending-member">
-              <img src="image/헬씨.png" alt="헬씨" class="character-img ending-char healthy-end">
-            </div>
-            <div class="ending-member">
-              <img src="image/신난유아.png" alt="신난 유아" class="character-img ending-char child-end">
-            </div>
-            <div class="ending-member">
-              <img src="image/에티.png" alt="에티" class="character-img ending-char eti-end">
-            </div>
-            <div class="ending-member">
-              <img src="image/휠체어신난유아.png" alt="신난 휠체어 유아" class="character-img ending-char wheelchair-end">
-            </div>
-            <div class="ending-member">
-              <img src="image/세이피.png" alt="세이피" class="character-img ending-char safy-end">
-            </div>
-          </div>
-          </div>
-          </div>
-          <div class="confetti-container" id="confetti"></div>
-          <button type="button" id="btn-replay" class="btn-replay" hidden aria-label="다시 보기">
-            <span class="btn-replay-label">다시 보기</span>
-          </button>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- 하단 타이틀 -->
-    <footer class="story-footer">
-      <p class="app-title">UDL 기반 디지털솔루션을 통한 통합학급 영양놀이</p>
-    </footer>
-
-    <!-- 진행 표시 -->
-    <div class="progress-bar">
-      <div id="progress-fill" class="progress-fill"></div>
-    </div>
-
+  <div class="char-slot child visible" id="slot-child-fat">
+    <div class="foot-shadow"></div>
+    <img class="character" src="image/뚱뚱유아.png?v=4" alt="뚱뚱유아">
+  </div>
+  <div class="char-slot child visible" id="slot-child-toy">
+    <div class="foot-shadow"></div>
+    <img class="character" src="image/장난감유아.png?v=4" alt="장난감유아">
+  </div>
+  <div class="char-slot child visible" id="slot-child-sick">
+    <div class="foot-shadow"></div>
+    <img class="character" src="image/배아픈유아.png?v=4" alt="배아픈유아">
   </div>
 
-  <!-- 탭/iframe: 자동재생 불가 시 1회 터치로 시작 -->
-  <div id="start-gate" class="start-gate" hidden>
-    <button type="button" id="btn-start" class="btn-start" aria-label="시작하기">
-      <span class="btn-start-label">시작하기</span>
-      <span class="btn-start-hint">화면을 눌러주세요</span>
-    </button>
+  <div class="char-slot hero" id="slot-hero-healthy">
+    <div class="foot-shadow"></div>
+    <img class="character" src="image/헬씨.png?v=4" alt="헬씨">
+  </div>
+  <div class="char-slot hero" id="slot-hero-eti">
+    <div class="foot-shadow"></div>
+    <img class="character" src="image/에티.png?v=4" alt="에티">
+  </div>
+  <div class="char-slot hero" id="slot-hero-safey">
+    <div class="foot-shadow"></div>
+    <img class="character" src="image/세이피.png?v=4" alt="세이피">
   </div>
 
-  <!-- 오디오 (HTML 태그로 미리 로드) -->
-  <audio id="aud-unlock" preload="auto" playsinline loop src="sound/silent.wav"></audio>
-  <audio id="aud-0" preload="auto" playsinline src="sound/audio_0.mp3"></audio>
-  <audio id="aud-1" preload="auto" playsinline src="sound/audio_1_놀면서 배우는 올바른 영양 습관, 우리 함께 해요.mp3"></audio>
-  <audio id="aud-2" preload="auto" playsinline src="sound/audio_2_안녕, 난 헬씨야, 몸을 튼튼하게 만드는 영양소 친구들을 만나볼까.mp3"></audio>
-  <audio id="aud-3" preload="auto" playsinline src="sound/audio_3_eti.mp3"></audio>
-  <audio id="aud-4" preload="auto" playsinline src="sound/audio_4_안녕, 난 세이피! 깨끗한 손과 안전한 식습관은 기본이지!.mp3"></audio>
+  <div id="mission-overlay" aria-hidden="true">
+    <div id="mission-card">
+      <img id="mission-image" src="" alt="미션 활동">
+    </div>
+  </div>
+  <div id="whiteout" aria-hidden="true"></div>
+  <div id="confetti" aria-hidden="true"></div>
+</div>
 
-  <script src="script.js"></script>
+<script>
+  const stage = document.getElementById('story-stage');
+  const flash = document.getElementById('flash');
+
+  const childFat = document.getElementById('slot-child-fat');
+  const childToy = document.getElementById('slot-child-toy');
+  const childSick = document.getElementById('slot-child-sick');
+  const kids = [childFat, childToy, childSick];
+
+  const heroHealthy = document.getElementById('slot-hero-healthy');
+  const heroEti = document.getElementById('slot-hero-eti');
+  const heroSafey = document.getElementById('slot-hero-safey');
+  const heroes = [heroHealthy, heroEti, heroSafey];
+
+  const allSlots = [...kids, ...heroes];
+
+  const BG_DARK = "image/어두운교실.png";
+  const BG_LIGHT = "image/밝은교실.png";
+  // 입모양·캐릭터 이미지 캐시 버스팅
+  const LIP_CACHE = "?v=4";
+  const KID_CHANGED = {
+    fat: "image/뚱뚱유아(변화).png" + LIP_CACHE,
+    toy: "image/장난감유아(변화).png" + LIP_CACHE,
+    sick: "image/배아픈유아(변화).png" + LIP_CACHE
+  };
+  const KID_SURPRISED = {
+    fat: "image/놀란뚱뚱유아.png" + LIP_CACHE,
+    toy: "image/놀란장난감유아.png" + LIP_CACHE,
+    sick: "image/놀란배아픈유아.png" + LIP_CACHE
+  };
+  const FAT_LIP_FRAMES = [
+    "image/뚱뚱유아1.png" + LIP_CACHE,
+    "image/뚱뚱유아2.png" + LIP_CACHE,
+    "image/뚱뚱유아3.png" + LIP_CACHE
+  ];
+  const TOY_LIP_FRAMES = [
+    "image/장난감유아2.png" + LIP_CACHE,
+    "image/장난감유아3.png" + LIP_CACHE
+  ];
+  const SICK_LIP_FRAMES = [
+    "image/배아픈유아1.png" + LIP_CACHE,
+    "image/배아픈유아2.png" + LIP_CACHE
+  ];
+  const HEALTHY_LIP_FRAMES = [
+    "image/헬씨1.png" + LIP_CACHE,
+    "image/헬씨2.png" + LIP_CACHE
+  ];
+  const ETI_LIP_FRAMES = [
+    "image/에티1.png" + LIP_CACHE,
+    "image/에티2.png" + LIP_CACHE
+  ];
+  const SAFEY_LIP_FRAMES = [
+    "image/세이피1.png" + LIP_CACHE,
+    "image/세이피2.png" + LIP_CACHE
+  ];
+  const HERO_LIP_GROUP = [
+    {
+      slot: heroHealthy,
+      frames: HEALTHY_LIP_FRAMES,
+      reset: "image/헬씨.png" + LIP_CACHE
+    },
+    {
+      slot: heroEti,
+      frames: ETI_LIP_FRAMES,
+      reset: "image/에티.png" + LIP_CACHE
+    },
+    {
+      slot: heroSafey,
+      frames: SAFEY_LIP_FRAMES,
+      reset: "image/세이피.png" + LIP_CACHE
+    }
+  ];
+  [
+    ...FAT_LIP_FRAMES,
+    ...TOY_LIP_FRAMES,
+    ...SICK_LIP_FRAMES,
+    ...HEALTHY_LIP_FRAMES,
+    ...ETI_LIP_FRAMES,
+    ...SAFEY_LIP_FRAMES
+  ].forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+
+  const timeline = [
+    {
+      bg: BG_DARK,
+      show: kids,
+      active: childFat,
+      // 나란히 서 있는 모습 → 이동 → 대사
+      holdBeforeMove: 1400,
+      moveBeforeAudio: 1300,
+      audio: "sound/audio_뚱뚱유아_대사1.mp3",
+      lipFrames: FAT_LIP_FRAMES,
+      lipRandom: true,
+      lipInterval: 360,
+      lipReset: "image/뚱뚱유아.png" + LIP_CACHE
+    },
+    {
+      bg: BG_DARK,
+      show: kids,
+      active: childToy,
+      holdBeforeMove: 500,
+      moveBeforeAudio: 1200,
+      audio: "sound/audio_장난감유아_대사1.mp3",
+      lipFrames: TOY_LIP_FRAMES,
+      lipRandom: true,
+      lipInterval: 360,
+      lipReset: "image/장난감유아.png" + LIP_CACHE
+    },
+    {
+      bg: BG_DARK,
+      show: kids,
+      active: childSick,
+      holdBeforeMove: 500,
+      moveBeforeAudio: 1200,
+      audio: "sound/audio_배아픈유아_대사1.mp3",
+      lipFrames: SICK_LIP_FRAMES,
+      lipRandom: false,
+      lipInterval: 360,
+      lipReset: "image/배아픈유아.png" + LIP_CACHE,
+      // 제자리로 돌아온 뒤 히어로 등장
+      waitReturn: 1300
+    },
+    // 히어로 등장: 유아와 같은 라인 + 효과음 + 대사1(우리가 도와줄게)
+    {
+      bg: BG_DARK,
+      show: kids,
+      appearHeroes: heroes,
+      sfx: "sound/Ascending 3.mp3",
+      audioList: [
+        "sound/audio_헬씨_대사1.mp3",
+        "sound/audio_에티_대사1.mp3",
+        "sound/audio_세이피_대사1.mp3"
+      ],
+      lipSyncGroup: HERO_LIP_GROUP,
+      lipRandom: false,
+      lipInterval: 360
+    },
+    // 헬씨 → 에티 → 세이피: 걸어 나오기 → 오디오 → 뒤로
+    {
+      bg: BG_DARK,
+      show: [...kids, ...heroes],
+      walkHero: heroHealthy,
+      audio: "sound/audio_헬씨_대사2.mp3",
+      lipFrames: HEALTHY_LIP_FRAMES,
+      lipRandom: false,
+      lipInterval: 360,
+      lipReset: "image/헬씨.png" + LIP_CACHE
+    },
+    {
+      bg: BG_DARK,
+      show: [...kids, ...heroes],
+      walkHero: heroEti,
+      audio: "sound/audio_에티_대사2.mp3",
+      lipFrames: ETI_LIP_FRAMES,
+      lipRandom: false,
+      lipInterval: 360,
+      lipReset: "image/에티.png" + LIP_CACHE
+    },
+    {
+      bg: BG_DARK,
+      show: [...kids, ...heroes],
+      walkHero: heroSafey,
+      audio: "sound/audio_세이피_대사2.mp3",
+      lipFrames: SAFEY_LIP_FRAMES,
+      lipRandom: false,
+      lipInterval: 360,
+      lipReset: "image/세이피.png" + LIP_CACHE
+    },
+    // 마지막: 셋이 대사2처럼 입모양 전환 + 대사3 동시 재생
+    {
+      bg: BG_DARK,
+      show: [...kids, ...heroes],
+      audioList: [
+        "sound/audio_헬씨_대사3.mp3",
+        "sound/audio_에티_대사3.mp3",
+        "sound/audio_세이피_대사3.mp3"
+      ],
+      lipSyncGroup: HERO_LIP_GROUP,
+      lipRandom: false,
+      lipInterval: 360
+    },
+    // 배경·캐릭터 유지 + 미션활동 1~6 오버레이 → 마지막 장면 전환
+    {
+      bg: BG_DARK,
+      show: [...kids, ...heroes],
+      missionOverlay: true,
+      missionImages: [
+        "image/미션1.jpg",
+        "image/미션2.jpg",
+        "image/미션3.jpg",
+        "image/미션4.jpg",
+        "image/미션5.jpg",
+        "image/미션6.jpg",
+        "image/미션7.png?v=2"
+      ],
+      missionSfx: "sound/sfx/mission_pop.ogg",
+      missionHoldMs: 1600,
+      endingFinale: true
+    }
+  ];
+
+  let currentAudio = null;
+  let activeAudios = [];
+  let stepTimers = [];
+  const lipSyncMap = new Map(); // slot -> { timer, resetSrc }
+
+  function clearTimers() {
+    stepTimers.forEach(clearTimeout);
+    stepTimers = [];
+  }
+
+  function later(ms, fn) {
+    const id = setTimeout(fn, ms);
+    stepTimers.push(id);
+  }
+
+  function stopLipSync(slot, resetSrc) {
+    if (slot) {
+      const state = lipSyncMap.get(slot);
+      if (state) {
+        clearInterval(state.timer);
+        const src = resetSrc !== undefined ? resetSrc : state.resetSrc;
+        if (src) {
+          const img = slot.querySelector('.character');
+          if (img) img.src = src;
+        }
+        lipSyncMap.delete(slot);
+      }
+      return;
+    }
+
+    // slot 없으면 전부 중지 (리셋은 resetSrc가 true일 때만)
+    lipSyncMap.forEach((state, s) => {
+      clearInterval(state.timer);
+      if (resetSrc && state.resetSrc) {
+        const img = s.querySelector('.character');
+        if (img) img.src = state.resetSrc;
+      }
+    });
+    lipSyncMap.clear();
+  }
+
+  function startLipSync(slot, frames, intervalMs, random, resetSrc) {
+    stopLipSync(slot);
+    const img = slot && slot.querySelector('.character');
+    if (!img || !frames || !frames.length) return;
+
+    let i = 0;
+    img.src = frames[0];
+    const timer = setInterval(() => {
+      if (random && frames.length > 1) {
+        let next = Math.floor(Math.random() * frames.length);
+        if (next === i) next = (next + 1) % frames.length;
+        i = next;
+      } else {
+        i = (i + 1) % frames.length;
+      }
+      img.src = frames[i];
+    }, intervalMs || 360);
+
+    lipSyncMap.set(slot, { timer, resetSrc: resetSrc || frames[0] });
+  }
+
+  function clearSpeaking() {
+    allSlots.forEach(el => {
+      el.classList.remove('speaking', 'step-forward', 'walking');
+    });
+  }
+
+  function setSpeaking(step) {
+    clearSpeaking();
+    if (step.active) step.active.classList.add('speaking');
+    if (step.activeAll) step.activeAll.forEach(el => el.classList.add('speaking'));
+  }
+
+  function stopAllAudio() {
+    stopLipSync();
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.onended = null;
+      currentAudio.onerror = null;
+      currentAudio = null;
+    }
+    activeAudios.forEach(a => {
+      a.pause();
+      a.onended = null;
+      a.onerror = null;
+    });
+    activeAudios = [];
+  }
+
+  const missionOverlay = document.getElementById('mission-overlay');
+  const missionCard = document.getElementById('mission-card');
+  const missionImage = document.getElementById('mission-image');
+  const whiteoutEl = document.getElementById('whiteout');
+  const confettiEl = document.getElementById('confetti');
+
+  function playMissionSfx(src) {
+    const sfx = new Audio(src);
+    sfx.volume = 0.55;
+    sfx.play().catch(() => {});
+  }
+
+  function applyEndingCast() {
+    currentBg = BG_LIGHT;
+    stage.style.backgroundImage = `url('${BG_LIGHT}')`;
+
+    const fatImg = childFat.querySelector('.character');
+    const toyImg = childToy.querySelector('.character');
+    const sickImg = childSick.querySelector('.character');
+    if (fatImg) fatImg.src = KID_CHANGED.fat;
+    if (toyImg) toyImg.src = KID_CHANGED.toy;
+    if (sickImg) sickImg.src = KID_CHANGED.sick;
+
+    [...kids, ...heroes].forEach(el => {
+      el.classList.add('visible');
+      el.classList.remove('speaking', 'step-forward', 'walking', 'pre-appear', 'appearing', 'ending-bounce');
+    });
+
+    const hImg = heroHealthy.querySelector('.character');
+    const eImg = heroEti.querySelector('.character');
+    const sImg = heroSafey.querySelector('.character');
+    if (hImg) hImg.src = "image/헬씨.png" + LIP_CACHE;
+    if (eImg) eImg.src = "image/에티.png" + LIP_CACHE;
+    if (sImg) sImg.src = "image/세이피.png" + LIP_CACHE;
+
+    // 배아픈유아(변화) 제외하고 살짝 바운스
+    [childFat, childToy, heroHealthy, heroEti, heroSafey].forEach(el => {
+      el.classList.add('ending-bounce');
+    });
+  }
+
+  let confettiTimer = null;
+
+  function spawnConfettiPiece() {
+    const colors = ['#FF6B6B', '#FFD15C', '#7CFFB2', '#7AB8FF', '#FF9AD5', '#B388FF', '#FF8A5B', '#FFF3A0'];
+    const p = document.createElement('span');
+    const kind = Math.random();
+    p.className = 'confetti-piece' + (kind < 0.33 ? ' round' : kind < 0.66 ? ' strip' : '');
+    p.style.setProperty('--x', (Math.random() * 100).toFixed(1) + '%');
+    p.style.setProperty('--color', colors[Math.floor(Math.random() * colors.length)]);
+    p.style.setProperty('--w', (5 + Math.random() * 8).toFixed(1) + 'px');
+    p.style.setProperty('--h', (7 + Math.random() * 10).toFixed(1) + 'px');
+    p.style.setProperty('--dur', (3.2 + Math.random() * 2.8).toFixed(2) + 's');
+    p.style.setProperty('--delay', (Math.random() * 0.2).toFixed(2) + 's');
+    p.style.setProperty('--drift', ((Math.random() - 0.5) * 160).toFixed(1) + 'px');
+    p.style.setProperty('--spin', ((Math.random() > 0.5 ? 1 : -1) * (420 + Math.random() * 520)).toFixed(0) + 'deg');
+    p.style.setProperty('--rot', (Math.random() * 360).toFixed(0) + 'deg');
+    confettiEl.appendChild(p);
+    setTimeout(() => {
+      if (p.parentNode) p.parentNode.removeChild(p);
+    }, 6500);
+  }
+
+  function startConfetti() {
+    if (confettiTimer) return;
+    confettiEl.innerHTML = '';
+    for (let i = 0; i < 12; i++) spawnConfettiPiece();
+    // 스토리 종료 후에도 계속 뿌리기 (양은 적게)
+    confettiTimer = setInterval(() => {
+      spawnConfettiPiece();
+      if (Math.random() > 0.45) spawnConfettiPiece();
+    }, 320);
+  }
+
+  function playEndingFinale(onDone) {
+    playSingleAudio("sound/영양미션완성.mp3", onDone);
+  }
+
+  function expandLastMissionAndRevealEnding(onDone) {
+    // 미션7이 이미 전체화면 — 잠시 유지 후 화이트아웃
+    missionOverlay.classList.add('expanding');
+    missionCard.classList.add('expand-fill', 'show');
+    missionCard.classList.remove('grow-from-tiny');
+
+    // 화이트아웃
+    later(700, () => {
+      whiteoutEl.classList.remove('reveal');
+      whiteoutEl.classList.add('active');
+    });
+
+    // 완전 화이트에서 밝은교실 + 캐릭터 준비
+    later(2400, () => {
+      applyEndingCast();
+      missionOverlay.classList.remove('active', 'expanding');
+      missionCard.classList.remove('show', 'expand-fill', 'grow-from-tiny');
+      missionImage.removeAttribute('src');
+    });
+
+    // 화이트가 걷히며 밝은교실 + Ascending
+    later(2800, () => {
+      whiteoutEl.classList.add('reveal');
+      whiteoutEl.classList.remove('active');
+      const ascend = new Audio("sound/Ascending 3.mp3");
+      ascend.volume = 0.7;
+      ascend.play().catch(() => {});
+    });
+
+    later(4600, () => {
+      whiteoutEl.classList.remove('reveal');
+      playEndingFinale(onDone);
+    });
+  }
+
+  function playMissionOverlay(step, onDone) {
+    const images = step.missionImages || [];
+    const hold = step.missionHoldMs || 1600;
+    const sfxSrc = step.missionSfx || "sound/sfx/mission_pop.ogg";
+
+    if (!images.length) {
+      onDone();
+      return;
+    }
+
+    missionOverlay.classList.add('active');
+    missionCard.classList.remove('show', 'expand-fill');
+    missionOverlay.classList.remove('expanding');
+    whiteoutEl.classList.remove('active');
+
+    let i = 0;
+
+    const showNext = () => {
+      if (i >= images.length) {
+        if (step.endingFinale) {
+          // 마지막 장(미션6)은 그대로 둔 채 전체 덮기 → 화이트아웃
+          expandLastMissionAndRevealEnding(onDone);
+        } else {
+          missionCard.classList.remove('show');
+          later(400, () => {
+            missionOverlay.classList.remove('active');
+            missionImage.removeAttribute('src');
+            onDone();
+          });
+        }
+        return;
+      }
+
+      const src = images[i];
+      const isLast = i === images.length - 1;
+
+      // 미션1~6만 카드 전환, 미션7은 작은 크기에서 확대
+      if (!isLast) {
+        missionCard.classList.remove('show', 'expand-fill', 'grow-from-tiny');
+        missionOverlay.classList.remove('expanding');
+      }
+
+      later(isLast ? 80 : 180, () => {
+        missionImage.src = src;
+        const reveal = () => {
+          if (isLast && step.endingFinale) {
+            // 미션7: 아주 작게 등장 → 화면 전체로 커짐
+            missionOverlay.classList.add('expanding');
+            missionCard.classList.remove('expand-fill');
+            missionCard.classList.add('grow-from-tiny', 'show');
+            startConfetti();
+            const clap = new Audio("sound/sfx/applause.mp3");
+            clap.volume = 0.75;
+            clap.play().catch(() => {});
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                missionCard.classList.remove('grow-from-tiny');
+                missionCard.classList.add('expand-fill');
+              });
+            });
+          } else {
+            missionCard.classList.add('show');
+            playMissionSfx(sfxSrc);
+          }
+
+          i += 1;
+          later(isLast && step.endingFinale ? Math.max(hold, 1500) : hold, showNext);
+        };
+
+        if (missionImage.complete) {
+          reveal();
+        } else {
+          missionImage.onload = () => {
+            missionImage.onload = null;
+            reveal();
+          };
+          missionImage.onerror = () => {
+            missionImage.onerror = null;
+            reveal();
+          };
+        }
+      });
+    };
+
+    images.forEach(src => { const img = new Image(); img.src = src; });
+    Object.values(KID_CHANGED).forEach(src => { const img = new Image(); img.src = src; });
+    Object.values(KID_SURPRISED).forEach(src => { const img = new Image(); img.src = src; });
+    const lightBg = new Image();
+    lightBg.src = BG_LIGHT;
+
+    later(200, showNext);
+  }
+
+  function finishStory() {
+    // 종이가루(confettiTimer)는 끄지 않고 계속 유지
+    clearTimers();
+    clearSpeaking();
+    setTimeout(() => {
+      if (window.AppInventor) {
+        window.AppInventor.setWebViewString("IntroFinished");
+      }
+    }, 1500);
+  }
+
+  function playSingleAudio(src, onDone) {
+    const audio = new Audio(src);
+    currentAudio = audio;
+    activeAudios = [audio];
+
+    const done = () => {
+      if (currentAudio === audio) currentAudio = null;
+      onDone();
+    };
+
+    audio.onended = done;
+    audio.onerror = () => {
+      console.warn("Audio load/play failed:", src);
+      later(2000, done);
+    };
+    audio.play().catch(e => {
+      console.warn("Audio Play Error:", e);
+      later(2000, done);
+    });
+  }
+
+  function playDialogueList(srcs, onDone) {
+    const list = srcs.map(src => new Audio(src));
+    activeAudios = list;
+    currentAudio = list[0] || null;
+
+    let remaining = list.length;
+    let finished = false;
+
+    const oneDone = () => {
+      remaining -= 1;
+      if (remaining <= 0 && !finished) {
+        finished = true;
+        currentAudio = null;
+        activeAudios = [];
+        onDone();
+      }
+    };
+
+    list.forEach(audio => {
+      audio.onended = oneDone;
+      audio.onerror = () => {
+        console.warn("Audio load/play failed:", audio.src);
+        oneDone();
+      };
+      audio.play().catch(e => {
+        console.warn("Audio Play Error:", e);
+        oneDone();
+      });
+    });
+
+    if (list.length === 0) onDone();
+  }
+
+  // 히어로 등장 별가루 — 앞에 덮고, 뒤에서 줌아웃
+  function spawnSparkles(slot, staggerMs) {
+    const burst = document.createElement('div');
+    burst.className = 'sparkle-burst';
+
+    const glow = document.createElement('div');
+    glow.className = 'sparkle-silhouette';
+    burst.appendChild(glow);
+
+    const count = 56;
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      const u = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.random());
+      const x = 50 + Math.cos(u) * r * 34;
+      const y = 50 + Math.sin(u) * r * 46;
+      s.className = 'sparkle' + (i % 3 === 0 ? ' dot' : '');
+      s.style.setProperty('--x', x.toFixed(1) + '%');
+      s.style.setProperty('--y', y.toFixed(1) + '%');
+      s.style.setProperty('--delay', ((staggerMs || 0) / 1000 + Math.random() * 0.7).toFixed(2) + 's');
+      s.style.setProperty('--size', (4 + Math.random() * 11).toFixed(1) + 'px');
+      burst.appendChild(s);
+    }
+    slot.appendChild(burst);
+    return burst;
+  }
+
+  function setKidsSurprised() {
+    const pairs = [
+      [childFat, KID_SURPRISED.fat],
+      [childToy, KID_SURPRISED.toy],
+      [childSick, KID_SURPRISED.sick]
+    ];
+    pairs.forEach(([slot, src]) => {
+      const img = slot.querySelector('.character');
+      if (!img) return;
+      img.style.transition = 'opacity 0.28s ease';
+      img.style.opacity = '0.4';
+      later(160, () => {
+        img.src = src;
+        later(40, () => {
+          img.style.opacity = '1';
+        });
+      });
+    });
+  }
+
+  function appearHeroesWithSparkles(heroList) {
+    // 히어로 등장 후 약 1초 뒤 유아 → 놀란 표정
+    later(1000, () => setKidsSurprised());
+
+    // 1) 반짝임이 캐릭터 자리를 먼저 덮음
+    const bursts = heroList.map((hero, idx) => {
+      hero.classList.add('visible', 'pre-appear');
+      return spawnSparkles(hero, idx * 70);
+    });
+
+    // 2) 반짝임 뒤에서 커지며 등장 → 반짝임이 서서히 걷힘
+    later(900, () => {
+      heroList.forEach((hero, idx) => {
+        later(idx * 110, () => {
+          hero.classList.remove('pre-appear');
+          hero.classList.add('appearing');
+
+          const burst = bursts[idx];
+          later(450, () => {
+            if (burst) burst.classList.add('fading');
+          });
+          later(1300, () => {
+            hero.classList.remove('appearing');
+            if (burst && burst.parentNode) burst.parentNode.removeChild(burst);
+          });
+        });
+      });
+    });
+  }
+
+  // 점프하며 나오기 → 오디오(+입모양) → 점프하며 들어가기
+  function playHeroWalk(hero, audioSrc, onDone, lipOpts) {
+    clearSpeaking();
+    heroes.forEach(h => h.classList.remove('step-forward', 'walking'));
+
+    // 점프 정점에서 위치 이동 → 착지 (미끄러짐 방지)
+    hero.classList.add('walking');
+    later(220, () => {
+      hero.classList.add('step-forward');
+    });
+    later(700, () => {
+      hero.classList.remove('walking');
+
+      if (lipOpts && lipOpts.frames) {
+        startLipSync(
+          hero,
+          lipOpts.frames,
+          lipOpts.interval || 360,
+          !!lipOpts.random,
+          lipOpts.reset || lipOpts.frames[0]
+        );
+      }
+
+      playSingleAudio(audioSrc, () => {
+        if (lipOpts && lipOpts.frames) {
+          stopLipSync(hero, lipOpts.reset || lipOpts.frames[0]);
+        }
+        // 점프 정점에서 제자리로
+        hero.classList.add('walking');
+        later(220, () => {
+          hero.classList.remove('step-forward');
+        });
+        later(700, () => {
+          hero.classList.remove('walking');
+          onDone();
+        });
+      });
+    });
+  }
+
+  let currentBg = BG_DARK;
+
+  function playStep(index) {
+    if (index >= timeline.length) {
+      finishStory();
+      return;
+    }
+
+    const step = timeline[index];
+    clearTimers();
+    stopAllAudio();
+    clearSpeaking();
+
+    // 같은 배경을 다시 넣으면 깜빡일 수 있어, 변경 시에만 적용
+    if (step.bg && step.bg !== currentBg) {
+      currentBg = step.bg;
+      stage.style.backgroundImage = `url('${step.bg}')`;
+    }
+
+    if (step.flash) {
+      flash.classList.add('flash-active');
+      later(800, () => flash.classList.remove('flash-active'));
+    }
+
+    if (step.hide) {
+      step.hide.forEach(el => {
+        el.classList.remove('visible', 'speaking', 'step-forward', 'walking');
+      });
+    }
+
+    if (step.show) {
+      step.show.forEach(el => el.classList.add('visible'));
+    }
+
+    // 히어로는 별가루와 함께 등장 (show에 미리 넣지 않음)
+    if (step.appearHeroes) {
+      appearHeroesWithSparkles(step.appearHeroes);
+    }
+
+    const goNext = () => {
+      clearSpeaking();
+      const wait = step.waitReturn ?? 0;
+      if (wait > 0) {
+        later(wait, () => playStep(index + 1));
+      } else {
+        playStep(index + 1);
+      }
+    };
+
+    // 그룹 대사: (선택)효과음 → 입모양 + 오디오 동시 재생
+    if (step.audioList) {
+      const startGroupLips = () => {
+        if (step.lipSyncGroup) {
+          step.lipSyncGroup.forEach(g => {
+            startLipSync(
+              g.slot,
+              g.frames,
+              step.lipInterval || 360,
+              !!step.lipRandom,
+              g.reset || g.frames[0]
+            );
+          });
+        }
+      };
+
+      const finishGroupLips = () => {
+        if (step.lipSyncGroup) {
+          step.lipSyncGroup.forEach(g => {
+            stopLipSync(g.slot, g.reset || g.frames[0]);
+          });
+        }
+      };
+
+      const playGroupAudio = () => {
+        startGroupLips();
+        playDialogueList(step.audioList, () => {
+          finishGroupLips();
+          goNext();
+        });
+      };
+
+      if (step.sfx) {
+        const sfx = new Audio(step.sfx);
+        currentAudio = sfx;
+        activeAudios = [sfx];
+
+        sfx.onended = playGroupAudio;
+        sfx.onerror = () => {
+          console.warn("SFX load/play failed:", step.sfx);
+          playGroupAudio();
+        };
+        sfx.play().catch(e => {
+          console.warn("SFX Play Error:", e);
+          playGroupAudio();
+        });
+      } else {
+        playGroupAudio();
+      }
+      return;
+    }
+
+    // 히어로 개별: 걸어 나오기 → 오디오 → 뒤로
+    if (step.walkHero) {
+      playHeroWalk(step.walkHero, step.audio, goNext, step.lipFrames ? {
+        frames: step.lipFrames,
+        interval: step.lipInterval,
+        random: step.lipRandom,
+        reset: step.lipReset
+      } : null);
+      return;
+    }
+
+    // 미션활동 오버레이 (배경·캐릭터 유지)
+    if (step.missionOverlay) {
+      playMissionOverlay(step, goNext);
+      return;
+    }
+
+    const hold = step.holdBeforeMove ?? 0;
+    const moveWait = step.moveBeforeAudio ?? 0;
+
+    // 유아: 나란히 대기 → 앞으로 → 대사 (+ 입모양 전환)
+    later(hold, () => {
+      setSpeaking(step);
+      later(moveWait, () => {
+        if (step.lipFrames) {
+          startLipSync(
+            step.active,
+            step.lipFrames,
+            step.lipInterval || 360,
+            !!step.lipRandom,
+            step.lipReset || step.lipFrames[0]
+          );
+        }
+        playSingleAudio(step.audio, () => {
+          if (step.lipFrames) {
+            stopLipSync(step.active, step.lipReset || step.lipFrames[0]);
+          }
+          goNext();
+        });
+      });
+    });
+  }
+
+  // 시작: 세 유아 나란히 보이는 상태에서 스토리 시작
+  playStep(0);
+</script>
 </body>
 </html>

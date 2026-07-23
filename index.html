@@ -82,6 +82,12 @@
       width: 16%;
       height: 42%;
       z-index: 5;
+      transition:
+        transform 0.55s ease,
+        opacity 0.7s ease,
+        bottom 0.55s ease,
+        width 0.55s ease,
+        height 0.55s ease;
     }
 
     /* 뚱뚱유아·장난감유아: 동일 높이 */
@@ -112,10 +118,8 @@
       object-position: bottom center;
     }
 
-    /* 대사 중: 앞으로 살짝 */
+    /* 대사 중: 제자리 유지 (미끄러지듯 앞/뒤 이동 없음) */
     .char-slot.speaking {
-      transform: translateY(3%) scale(1.04);
-      bottom: 7.5%;
       z-index: 20;
     }
 
@@ -194,22 +198,22 @@
     #slot-hero-eti     { left: 53%; width: 13%; height: 39%; }
     #slot-hero-safey   { left: 82%; width: 17%; height: 48%; }
 
-    /* 점프하며 살짝만 나오기 (미끄러짐 최소화) */
+    /* 점프하며 살짝만 나오기 */
     .char-slot.hero.step-forward {
-      bottom: 8.5%;
-      transform: translateY(2%) scale(1.03);
+      bottom: 9.2%;
+      transform: translateY(1%) scale(1.015);
       z-index: 22;
     }
 
-    /* 한 번 점프하며 나오기/들어가기 */
+    /* 한 번 작게 점프하며 나오기/들어가기 */
     .char-slot.hero.walking .character {
       transform-origin: bottom center;
-      animation: walk-bounce 0.65s ease-in-out 1;
+      animation: walk-bounce 0.48s ease-in-out 1;
     }
     @keyframes walk-bounce {
       0% { transform: translateY(0) scale(1, 1); }
-      35% { transform: translateY(-16%) scale(0.96, 1.09); }
-      70% { transform: translateY(0) scale(1.05, 0.93); }
+      35% { transform: translateY(-8%) scale(0.98, 1.04); }
+      70% { transform: translateY(0) scale(1.02, 0.97); }
       100% { transform: translateY(0) scale(1, 1); }
     }
 
@@ -343,11 +347,16 @@
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.28);
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.7s ease;
       pointer-events: none;
     }
     #mission-overlay.active {
       display: flex;
+      opacity: 1;
+    }
+    #mission-overlay.active.dimmed {
+      background: rgba(0, 0, 0, 0.28);
     }
     #mission-card {
       width: 94%;
@@ -360,7 +369,7 @@
         0 0 0 4px rgba(255, 255, 255, 0.55);
       opacity: 0;
       transform: scale(0.92) translateY(12px);
-      transition: opacity 0.45s ease, transform 0.45s ease;
+      transition: opacity 0.55s ease, transform 0.55s ease;
       background: #fff;
     }
     #mission-card.show {
@@ -376,10 +385,14 @@
       background: #fff;
     }
 
-    /* 미션7: 아주 작은 크기 → 화면 전체 */
+    /* 미션7: 아주 작은 크기 → 화면 전체 (서서히) */
     #mission-overlay.expanding {
       background: rgba(0, 0, 0, 0);
-      transition: background 0.6s ease;
+      transition: background 0.6s ease, opacity 1.7s ease;
+    }
+    #mission-overlay.fade-to-ending {
+      opacity: 0;
+      pointer-events: none;
     }
     #mission-card.grow-from-tiny {
       width: 6%;
@@ -402,9 +415,9 @@
       transform: none;
       opacity: 1;
       transition:
-        width 1.25s cubic-bezier(0.22, 0.61, 0.36, 1),
-        height 1.25s cubic-bezier(0.22, 0.61, 0.36, 1),
-        border-radius 1.25s ease;
+        width 2.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+        height 2.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+        border-radius 2.7s ease;
     }
     #mission-card.expand-fill img,
     #mission-card.grow-from-tiny img {
@@ -422,32 +435,8 @@
       z-index: 50;
       pointer-events: none;
       opacity: 0;
-      background: #ffffff;
-      transition: opacity 1.65s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    #whiteout.active {
-      opacity: 1;
-    }
-    #whiteout.reveal {
-      opacity: 0;
-      transition: opacity 1.8s cubic-bezier(0.22, 0.61, 0.36, 1);
-    }
-    /* 화이트아웃 위 빛 번짐 (순백) */
-    #whiteout::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: 40%;
-      width: 140%;
-      height: 140%;
-      transform: translate(-50%, -50%) scale(0.4);
-      background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.7) 40%, transparent 70%);
-      opacity: 0;
-      transition: transform 1.7s ease, opacity 1.2s ease;
-    }
-    #whiteout.active::after {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1.15);
+      background: transparent;
+      visibility: hidden;
     }
 
     /* 알록달록 종이 가루 */
@@ -485,13 +474,54 @@
       }
     }
 
-    /* 엔딩 바운스 (배아픈유아 변화 제외) */
+    /* 엔딩 눈깜빡: 같은 슬롯에 겹치되, 한 장만 보이게 */
+    .char-stack {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transform-origin: bottom center;
+    }
+    .char-slot.ending-blink .character,
+    .char-slot.ending-blink .character-blink {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      height: 100%;
+      width: auto;
+      max-width: none;
+      object-fit: contain;
+      object-position: bottom center;
+      transform: translateX(-50%);
+      transform-origin: bottom center;
+    }
+    #slot-child-toy.ending-blink .character,
+    #slot-child-toy.ending-blink .character-blink {
+      height: 106%;
+    }
+    .char-slot.ending-blink .character-blink {
+      visibility: hidden;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .char-slot.ending-blink.is-blinking .character {
+      visibility: hidden;
+    }
+    .char-slot.ending-blink.is-blinking .character-blink {
+      visibility: visible;
+    }
+    .char-slot.ending-blink .character {
+      z-index: 1;
+      visibility: visible;
+    }
+
+    /* 엔딩 바운스: 히어로만 */
     .char-slot.ending-bounce .character {
       transform-origin: bottom center;
       animation: ending-bounce 1.15s ease-in-out infinite;
     }
-    #slot-child-fat.ending-bounce .character { animation-delay: 0s; }
-    #slot-child-toy.ending-bounce .character { animation-delay: 0.12s; }
     #slot-hero-healthy.ending-bounce .character { animation-delay: 0.05s; }
     #slot-hero-eti.ending-bounce .character { animation-delay: 0.18s; }
     #slot-hero-safey.ending-bounce .character { animation-delay: 0.08s; }
@@ -500,22 +530,247 @@
       50% { transform: translateY(-10px); }
     }
 
-    /* 시작 버튼 (오디오 잠금 해제용) */
+    /* 상장 받은 유아: 눈깜빡임과 겹쳐도 자연스럽게 몸만 살짝 들썩 */
+    .char-slot.child.award-happy .char-stack {
+      transform-origin: bottom center;
+      animation: kid-award-happy 1.15s ease-in-out infinite;
+    }
+    .char-slot.child.award-happy > .character {
+      transform-origin: bottom center;
+      animation: kid-award-happy 1.15s ease-in-out infinite;
+    }
+    .char-slot.child.award-happy .char-stack > .character,
+    .char-slot.child.award-happy .char-stack > .character-blink {
+      /* 스택이 움직일 때 개별 캐릭터 애니 없음 (깜빡임 유지) */
+      animation: none;
+    }
+    /* 배아픈유아(휠체어): 상하 바운스 없이 앞뒤로만 아주 살짝 */
+    #slot-child-sick.award-happy .char-stack,
+    #slot-child-sick.award-happy > .character {
+      transform-origin: bottom center;
+      animation: kid-award-wheelchair 1.4s ease-in-out infinite;
+    }
+    #slot-child-fat.award-happy .char-stack { animation-delay: 0s; }
+    #slot-child-toy.award-happy .char-stack { animation-delay: 0.14s; }
+    #slot-child-sick.award-happy .char-stack { animation-delay: 0.08s; }
+    @keyframes kid-award-happy {
+      0%, 100% {
+        transform: translateY(0) scale(1, 1);
+      }
+      50% {
+        transform: translateY(-1.6%) scale(1.01, 0.99);
+      }
+    }
+    @keyframes kid-award-wheelchair {
+      0%, 100% {
+        transform: translateX(0) rotate(0deg);
+      }
+      50% {
+        transform: translateX(1.1%) rotate(0.35deg);
+      }
+    }
+
+    /* 튼튼 영양대장 상장 — 유아 머리 위 (입체 카드) */
+    .char-slot.child {
+      overflow: visible;
+      perspective: 520px;
+      perspective-origin: 50% 35%;
+    }
+    .nutrition-award-wrap {
+      --award-gap: 1.4vmin;
+      --char-h: 100%;
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--char-h) + var(--award-gap));
+      width: clamp(76px, 14vmin, 124px);
+      z-index: 28;
+      pointer-events: none;
+      transform: translateX(-50%);
+      transform-style: preserve-3d;
+    }
+    #slot-child-fat .nutrition-award-wrap {
+      --char-h: 100%;
+    }
+    #slot-child-toy .nutrition-award-wrap {
+      --char-h: 106%;
+    }
+    #slot-child-sick .nutrition-award-wrap {
+      --char-h: 100%;
+    }
+    .nutrition-award {
+      position: relative;
+      width: 100%;
+      opacity: 0;
+      transform-origin: center bottom;
+      transform-style: preserve-3d;
+      transform: translateY(18%) rotateX(28deg) scale(0.78);
+    }
+    .nutrition-award.show {
+      animation: award-appear-3d 1.25s cubic-bezier(0.22, 0.82, 0.28, 1) forwards;
+    }
+    .nutrition-award.settled {
+      opacity: 1;
+      animation: award-idle-3d 2.8s ease-in-out infinite;
+    }
+    @keyframes award-appear-3d {
+      0% {
+        opacity: 0;
+        transform: translateY(24%) rotateX(38deg) scale(0.72);
+      }
+      58% {
+        opacity: 1;
+        transform: translateY(-3%) rotateX(10deg) scale(1.03);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) rotateX(14deg) scale(1);
+      }
+    }
+    @keyframes award-idle-3d {
+      0%, 100% {
+        transform: translateY(0) rotateX(14deg) scale(1);
+      }
+      50% {
+        transform: translateY(-2px) rotateX(12deg) scale(1.01);
+      }
+    }
+    .nutrition-award img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 5px;
+      background: #fff;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.95),
+        0 8px 18px rgba(40, 30, 15, 0.28),
+        0 2px 4px rgba(40, 30, 15, 0.18),
+        0 18px 28px -8px rgba(30, 20, 10, 0.35);
+      transform: translateZ(12px);
+      backface-visibility: hidden;
+    }
+    /* 앞면 하이라이트 — 종이 질감/빛 반사 */
+    .nutrition-award::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 5px;
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(255, 255, 255, 0.12) 28%,
+        transparent 48%,
+        rgba(40, 30, 10, 0.06) 100%
+      );
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+      pointer-events: none;
+      transform: translateZ(14px);
+    }
+    /* 바닥에 떨어지는 그림자 — 떠 있는 입체감 */
+    .nutrition-award::before {
+      content: '';
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      bottom: -10%;
+      height: 18%;
+      border-radius: 50%;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(40, 30, 15, 0.38) 0%,
+        rgba(40, 30, 15, 0.12) 55%,
+        transparent 75%
+      );
+      filter: blur(2px);
+      transform: rotateX(80deg) translateZ(-8px) scale(1, 0.55);
+      z-index: -1;
+    }
+    .award-sparkle-burst {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 160%;
+      height: 140%;
+      transform: translate(-50%, 8%);
+      pointer-events: none;
+      z-index: 3;
+      overflow: visible;
+    }
+    .award-sparkle {
+      position: absolute;
+      left: var(--x, 50%);
+      top: var(--y, 50%);
+      width: var(--size, 10px);
+      height: var(--size, 10px);
+      margin-left: calc(var(--size, 10px) / -2);
+      margin-top: calc(var(--size, 10px) / -2);
+      background: #FFE566;
+      box-shadow:
+        0 0 4px rgba(255, 255, 255, 1),
+        0 0 12px rgba(255, 220, 90, 0.95),
+        0 0 20px rgba(255, 200, 60, 0.65);
+      clip-path: polygon(
+        50% 0%, 63% 38%, 100% 38%, 69% 59%,
+        82% 100%, 50% 75%, 18% 100%, 31% 59%,
+        0% 38%, 37% 38%
+      );
+      opacity: 0;
+      animation: award-sparkle-pop 1.15s ease-out forwards;
+      animation-delay: var(--delay, 0s);
+    }
+    .award-sparkle.dot {
+      clip-path: none;
+      border-radius: 50%;
+      background: #fffef0;
+    }
+    .award-sparkle-burst::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: 70%;
+      height: 70%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 248, 180, 0.75) 0%,
+        rgba(255, 220, 100, 0.28) 42%,
+        transparent 72%
+      );
+      animation: award-glow-flash 0.9s ease-out forwards;
+    }
+    @keyframes award-glow-flash {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+      40% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.35); }
+    }
+    @keyframes award-sparkle-pop {
+      0% { opacity: 0; transform: scale(0.15) rotate(0deg); }
+      25% { opacity: 1; transform: scale(1.35) rotate(12deg); }
+      70% { opacity: 0.85; transform: scale(1) rotate(-6deg); }
+      100% { opacity: 0; transform: scale(0.55) rotate(0deg); }
+    }
+
+    /* 시작 / 다시보기 버튼 */
     #start-gate {
       position: absolute;
       inset: 0;
       z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       background: rgba(20, 28, 24, 0.42);
       -webkit-tap-highlight-color: transparent;
     }
     #start-gate.hidden {
       display: none;
     }
-    #start-btn {
+    .story-action-btn {
       appearance: none;
+      position: absolute;
+      /* 상단 가운데 — 캐릭터·상장과 겹치지 않게 */
+      left: 50%;
+      top: 11%;
+      bottom: auto;
+      z-index: 101;
       border: 3px solid #fff;
       cursor: pointer;
       color: #2d5a3d;
@@ -529,25 +784,37 @@
         0 0 0 3px rgba(100, 170, 70, 0.35),
         0 6px 0 #5FA83A,
         0 10px 22px rgba(40, 90, 30, 0.25);
+      transform: translateX(-50%);
       transform-origin: center bottom;
       animation: start-btn-bounce 1.4s ease-in-out infinite;
+      -webkit-tap-highlight-color: transparent;
     }
     #start-btn::before {
       content: '▶ ';
       font-size: 0.78em;
       vertical-align: 0.05em;
     }
-    #start-btn:active {
+    #replay-btn::before {
+      content: '↻ ';
+      font-size: 1.05em;
+      font-weight: 700;
+      vertical-align: -0.02em;
+      margin-right: 0.05em;
+    }
+    .story-action-btn:active {
       animation: none;
-      transform: translateY(4px);
+      transform: translate(-50%, 4px);
       box-shadow:
         0 0 0 3px rgba(100, 170, 70, 0.3),
         0 2px 0 #5FA83A,
         0 4px 12px rgba(40, 90, 30, 0.2);
     }
+    .story-action-btn.hidden {
+      display: none;
+    }
     @keyframes start-btn-bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-7px); }
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -7px); }
     }
   </style>
 </head>
@@ -558,28 +825,28 @@
 
   <div class="char-slot child visible" id="slot-child-fat">
     <div class="foot-shadow"></div>
-    <img class="character" src="image/뚱뚱유아.png?v=4" alt="뚱뚱유아">
+    <img class="character" src="image/뚱뚱유아.png?v=5" alt="뚱뚱유아">
   </div>
   <div class="char-slot child visible" id="slot-child-toy">
     <div class="foot-shadow"></div>
-    <img class="character" src="image/장난감유아.png?v=4" alt="장난감유아">
+    <img class="character" src="image/장난감유아.png?v=5" alt="장난감유아">
   </div>
   <div class="char-slot child visible" id="slot-child-sick">
     <div class="foot-shadow"></div>
-    <img class="character" src="image/배아픈유아.png?v=4" alt="배아픈유아">
+    <img class="character" src="image/배아픈유아.png?v=5" alt="배아픈유아">
   </div>
 
   <div class="char-slot hero" id="slot-hero-healthy">
     <div class="foot-shadow"></div>
-    <img class="character" src="image/헬씨.png?v=4" alt="헬씨">
+    <img class="character" src="image/헬씨.png?v=5" alt="헬씨">
   </div>
   <div class="char-slot hero" id="slot-hero-eti">
     <div class="foot-shadow"></div>
-    <img class="character" src="image/에티.png?v=4" alt="에티">
+    <img class="character" src="image/에티.png?v=5" alt="에티">
   </div>
   <div class="char-slot hero" id="slot-hero-safey">
     <div class="foot-shadow"></div>
-    <img class="character" src="image/세이피.png?v=4" alt="세이피">
+    <img class="character" src="image/세이피.png?v=5" alt="세이피">
   </div>
 
   <div id="mission-overlay" aria-hidden="true">
@@ -590,8 +857,9 @@
   <div id="whiteout" aria-hidden="true"></div>
   <div id="confetti" aria-hidden="true"></div>
   <div id="start-gate" aria-hidden="false">
-    <button type="button" id="start-btn" aria-label="시작">시작!</button>
+    <button type="button" id="start-btn" class="story-action-btn" aria-label="시작">시작!</button>
   </div>
+  <button type="button" id="replay-btn" class="story-action-btn hidden" aria-label="다시보기" aria-hidden="true">다시보기</button>
 </div>
 
 <script>
@@ -613,16 +881,26 @@
   const BG_DARK = "image/어두운교실.png";
   const BG_LIGHT = "image/밝은교실.png";
   // 입모양·캐릭터 이미지 캐시 버스팅
-  const LIP_CACHE = "?v=4";
+  const LIP_CACHE = "?v=5";
   const KID_CHANGED = {
     fat: "image/뚱뚱유아(변화).png" + LIP_CACHE,
     toy: "image/장난감유아(변화).png" + LIP_CACHE,
     sick: "image/배아픈유아(변화).png" + LIP_CACHE
   };
+  const KID_CHANGED_BLINK = {
+    fat: "image/뚱뚱유아(변화)_눈.png" + LIP_CACHE,
+    toy: "image/장난감유아(변화)_눈.png" + LIP_CACHE,
+    sick: "image/배아픈유아(변화)_눈.png" + LIP_CACHE
+  };
   const KID_SURPRISED = {
     fat: "image/놀란뚱뚱유아.png" + LIP_CACHE,
     toy: "image/놀란장난감유아.png" + LIP_CACHE,
     sick: "image/놀란배아픈유아.png" + LIP_CACHE
+  };
+  const KID_SURPRISED_BLINK = {
+    fat: "image/놀란뚱뚱유아_눈.png" + LIP_CACHE,
+    toy: "image/놀란장난감유아_눈.png" + LIP_CACHE,
+    sick: "image/놀란배아픈유아_눈.png" + LIP_CACHE
   };
   const FAT_LIP_FRAMES = [
     "image/뚱뚱유아1.png" + LIP_CACHE,
@@ -783,12 +1061,12 @@
         };
         source.start();
         if (loop) {
-          loopingSources.push(source);
+          loopingSources.push({ source, gain });
         } else {
           activeBufferSources.push(source);
           setTimeout(done, Math.ceil((buffer.duration || 1) * 1000) + 250);
         }
-        return source;
+        return { source, gain };
       })
       .catch(err => {
         console.warn('playBuffer failed:', src, err);
@@ -800,8 +1078,101 @@
   }
 
   function stopLoopingAudio() {
-    stopBufferSources(loopingSources);
+    loopingSources.forEach(item => {
+      const src = item && item.source ? item.source : item;
+      try { src.stop(); } catch (e) {}
+    });
     loopingSources = [];
+    applauseRunning = false;
+  }
+
+  // 박수: 공격부 스킵 + 긴 크로스페이드 + 2레이어 위상차로 자연스럽게 이어 붙임
+  let applauseRunning = false;
+
+  function playNaturalApplause(opts) {
+    const TOTAL_MS = (opts && opts.totalMs) || 18000;
+    const FADE_MS = (opts && opts.fadeMs) || 5000;
+    const FADE_IN_MS = (opts && opts.fadeInMs) != null ? opts.fadeInMs : 350;
+    const VOL = opts && opts.volume != null ? opts.volume : 0.46;
+    if (applauseRunning) return;
+    stopLoopingAudio();
+    applauseRunning = true;
+
+    unlockAudioContext()
+      .then(() => loadAudioBuffer("sound/sfx/applause.mp3"))
+      .then(buffer => {
+        const ctx = getAudioCtx();
+        const master = ctx.createGain();
+        const t0 = ctx.currentTime;
+        // 페이드 인으로 시작
+        master.gain.setValueAtTime(0.001, t0);
+        master.gain.linearRampToValueAtTime(VOL, t0 + FADE_IN_MS / 1000);
+        master.connect(ctx.destination);
+
+        const duration = Math.max(0.8, buffer.duration);
+        // 루프 이음새: 앞부분 박수 공격(transient)은 건너뛰고 긴 크로스페이드
+        const skipAttack = Math.min(0.28, duration * 0.08);
+        const usable = Math.max(0.6, duration - skipAttack);
+        const crossfade = Math.min(0.85, usable * 0.28);
+        const endAt = t0 + TOTAL_MS / 1000;
+
+        function scheduleLayer(phaseOffset, rate) {
+          let nextStart = t0 + 0.02 + phaseOffset;
+          let first = true;
+          while (nextStart < endAt - 0.08) {
+            const source = ctx.createBufferSource();
+            const gain = ctx.createGain();
+            source.buffer = buffer;
+            source.playbackRate.value = rate;
+            source.connect(gain);
+            gain.connect(master);
+
+            const offset = first ? 0 : skipAttack;
+            const playLen = first ? duration : usable;
+            const startAt = nextStart;
+            const stopAt = startAt + playLen / rate;
+
+            gain.gain.setValueAtTime(0, startAt);
+            gain.gain.linearRampToValueAtTime(1, startAt + crossfade);
+            const fadeOutStart = Math.max(startAt + crossfade, stopAt - crossfade);
+            gain.gain.setValueAtTime(1, fadeOutStart);
+            gain.gain.linearRampToValueAtTime(0, stopAt);
+
+            try {
+              source.start(startAt, offset, playLen + 0.05);
+              source.stop(stopAt + 0.04);
+            } catch (e) {}
+            loopingSources.push({ source, gain, master });
+            nextStart = stopAt - crossfade;
+            first = false;
+          }
+        }
+
+        // 두 레이어를 어긋나게 + 미세한 속도차로 군중감
+        scheduleLayer(0, 1.0);
+        scheduleLayer(usable * 0.42, 0.985);
+
+        // later()는 finishStory의 clearTimers에 지워질 수 있어 Web Audio로 페이드 예약
+        const fadeStart = Math.max(
+          t0 + FADE_IN_MS / 1000 + 0.05,
+          t0 + (TOTAL_MS - FADE_MS) / 1000
+        );
+        master.gain.setValueAtTime(VOL, fadeStart);
+        master.gain.linearRampToValueAtTime(0.001, fadeStart + FADE_MS / 1000);
+
+        const stopDelay = TOTAL_MS + 400;
+        setTimeout(() => {
+          stopLoopingAudio();
+        }, stopDelay);
+      })
+      .catch(err => {
+        applauseRunning = false;
+        console.warn('playNaturalApplause failed:', err);
+      });
+  }
+
+  function playEndingApplause() {
+    playNaturalApplause({ totalMs: 15000, fadeMs: 5000, fadeInMs: 1400, volume: 0.28 });
   }
 
   preloadAudioBuffers();
@@ -811,9 +1182,9 @@
       bg: BG_DARK,
       show: kids,
       active: childFat,
-      // 나란히 서 있는 모습 → 이동 → 대사
-      holdBeforeMove: 1400,
-      moveBeforeAudio: 1300,
+      // 나란히 대기 → 제자리에서 대사
+      holdBeforeMove: 500,
+      moveBeforeAudio: 0,
       audio: "sound/audio_뚱뚱유아_대사1.mp3",
       lipFrames: FAT_LIP_FRAMES,
       lipRandom: true,
@@ -824,8 +1195,8 @@
       bg: BG_DARK,
       show: kids,
       active: childToy,
-      holdBeforeMove: 500,
-      moveBeforeAudio: 1200,
+      holdBeforeMove: 350,
+      moveBeforeAudio: 0,
       audio: "sound/audio_장난감유아_대사1.mp3",
       lipFrames: TOY_LIP_FRAMES,
       lipRandom: true,
@@ -836,15 +1207,14 @@
       bg: BG_DARK,
       show: kids,
       active: childSick,
-      holdBeforeMove: 500,
-      moveBeforeAudio: 1200,
+      holdBeforeMove: 350,
+      moveBeforeAudio: 0,
       audio: "sound/audio_배아픈유아_대사1.mp3",
       lipFrames: SICK_LIP_FRAMES,
       lipRandom: false,
       lipInterval: 360,
       lipReset: "image/배아픈유아.png" + LIP_CACHE,
-      // 제자리로 돌아온 뒤 히어로 등장
-      waitReturn: 1300
+      waitReturn: 500
     },
     // 히어로 등장: 유아와 같은 라인 + 효과음 + 대사1(우리가 도와줄게)
     {
@@ -987,7 +1357,7 @@
 
   function clearSpeaking() {
     allSlots.forEach(el => {
-      el.classList.remove('speaking', 'step-forward', 'walking');
+      el.classList.remove('speaking', 'walking');
     });
   }
 
@@ -1029,17 +1399,11 @@
   function applyEndingCast() {
     currentBg = BG_LIGHT;
     stage.style.backgroundImage = `url('${BG_LIGHT}')`;
-
-    const fatImg = childFat.querySelector('.character');
-    const toyImg = childToy.querySelector('.character');
-    const sickImg = childSick.querySelector('.character');
-    if (fatImg) fatImg.src = KID_CHANGED.fat;
-    if (toyImg) toyImg.src = KID_CHANGED.toy;
-    if (sickImg) sickImg.src = KID_CHANGED.sick;
+    clearNutritionAwards();
 
     [...kids, ...heroes].forEach(el => {
       el.classList.add('visible');
-      el.classList.remove('speaking', 'step-forward', 'walking', 'pre-appear', 'appearing', 'ending-bounce');
+      el.classList.remove('speaking', 'step-forward', 'walking', 'pre-appear', 'appearing', 'ending-bounce', 'award-happy');
     });
 
     const hImg = heroHealthy.querySelector('.character');
@@ -1049,10 +1413,241 @@
     if (eImg) eImg.src = "image/에티.png" + LIP_CACHE;
     if (sImg) sImg.src = "image/세이피.png" + LIP_CACHE;
 
-    // 배아픈유아(변화) 제외하고 살짝 바운스
-    [childFat, childToy, heroHealthy, heroEti, heroSafey].forEach(el => {
+    // 히어로만 살짝 바운스 (눈 깜빡이는 유아는 바운스 제외 → 깜빡임이 자연스럽게)
+    [heroHealthy, heroEti, heroSafey].forEach(el => {
       el.classList.add('ending-bounce');
     });
+
+    startEndingBlinks();
+  }
+
+  function clearNutritionAwards() {
+    document.querySelectorAll('.nutrition-award-wrap').forEach(el => el.remove());
+    kids.forEach(slot => slot.classList.remove('award-happy'));
+  }
+
+  const AWARD_IMG = "image/미션7.png?v=2";
+
+  function spawnAwardSparkles(wrap) {
+    const burst = document.createElement('div');
+    burst.className = 'award-sparkle-burst';
+    const count = 28;
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      s.className = 'award-sparkle' + (i % 3 === 0 ? ' dot' : '');
+      s.style.setProperty('--x', (4 + Math.random() * 92).toFixed(1) + '%');
+      s.style.setProperty('--y', (2 + Math.random() * 96).toFixed(1) + '%');
+      s.style.setProperty('--delay', (Math.random() * 0.4).toFixed(2) + 's');
+      s.style.setProperty('--size', (7 + Math.random() * 12).toFixed(1) + 'px');
+      burst.appendChild(s);
+    }
+    wrap.appendChild(burst);
+    later(1400, () => {
+      if (burst.parentNode) burst.remove();
+    });
+  }
+
+  function playAwardChime() {
+    // Ascending을 짧게 페이드아웃해 다음 상장/대사에 끊기지 않게
+    unlockAudioContext()
+      .then(() => loadAudioBuffer("sound/Ascending 3.mp3"))
+      .then(buffer => {
+        const ctx = getAudioCtx();
+        const source = ctx.createBufferSource();
+        const gain = ctx.createGain();
+        source.buffer = buffer;
+        source.connect(gain);
+        gain.connect(ctx.destination);
+
+        const vol = 0.26;
+        const now = ctx.currentTime;
+        const hold = Math.min(1.15, Math.max(0.7, buffer.duration * 0.45));
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(vol, now + 0.1);
+        gain.gain.setValueAtTime(vol, now + hold);
+        gain.gain.linearRampToValueAtTime(0.001, now + hold + 0.55);
+        source.start(now);
+        try { source.stop(now + hold + 0.6); } catch (e) {}
+      })
+      .catch(err => console.warn('playAwardChime failed:', err));
+  }
+
+  function spawnNutritionAwards(onThirdVisible) {
+    clearNutritionAwards();
+    const targets = [childFat, childToy, childSick];
+    const STAGGER = 1150;
+    let finished = false;
+
+    targets.forEach((slot, i) => {
+      later(i * STAGGER, () => {
+        const wrap = document.createElement('div');
+        wrap.className = 'nutrition-award-wrap';
+        wrap.setAttribute('aria-hidden', 'true');
+
+        const award = document.createElement('div');
+        award.className = 'nutrition-award';
+        const img = document.createElement('img');
+        img.src = AWARD_IMG;
+        img.alt = '튼튼 영양대장 상';
+        award.appendChild(img);
+        wrap.appendChild(award);
+        slot.appendChild(wrap);
+
+        // 상 받은 순간부터 살짝 신나서 들썩 (눈깜빡임은 스택 단위로 함께 움직임)
+        slot.classList.add('award-happy');
+
+        // 반짝임은 wrap에 두어 상장 opacity와 분리 (잘 보이게)
+        spawnAwardSparkles(wrap);
+        playAwardChime();
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => award.classList.add('show'));
+        });
+        later(1300, () => {
+          award.classList.remove('show');
+          award.classList.add('settled');
+        });
+
+        // 세 번째 상장이 보일 때 콜백
+        if (i === targets.length - 1) {
+          later(700, () => {
+            if (finished) return;
+            finished = true;
+            if (typeof onThirdVisible === 'function') onThirdVisible();
+          });
+        }
+      });
+    });
+  }
+
+  let blinkTimeouts = [];
+  let blinkIntervals = [];
+
+  function stopEndingBlinks() {
+    blinkTimeouts.forEach(clearTimeout);
+    blinkIntervals.forEach(clearInterval);
+    blinkTimeouts = [];
+    blinkIntervals = [];
+    kids.forEach(slot => {
+      slot.classList.remove('is-blinking');
+      const blinkImg = slot.querySelector('.character-blink');
+      if (blinkImg) blinkImg.classList.remove('is-closed');
+    });
+  }
+
+  function ensureEndingBlinkStack(slot, openSrc, closedSrc) {
+    let stack = slot.querySelector('.char-stack');
+    let openImg = slot.querySelector('.character');
+    if (!openImg) return null;
+
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'char-stack';
+      openImg.parentNode.insertBefore(stack, openImg);
+      stack.appendChild(openImg);
+    }
+
+    let blinkImg = stack.querySelector('.character-blink');
+    if (!blinkImg) {
+      blinkImg = document.createElement('img');
+      blinkImg.className = 'character-blink';
+      blinkImg.alt = '';
+      blinkImg.setAttribute('aria-hidden', 'true');
+      stack.appendChild(blinkImg);
+    }
+
+    openImg.src = openSrc;
+    blinkImg.src = closedSrc;
+    slot.classList.add('ending-blink');
+    slot.classList.remove('is-blinking');
+    return { slot, openImg, blinkImg };
+  }
+
+  function startKidBlinks(specs) {
+    stopEndingBlinks();
+    const BLINK_HOLD = 120;
+
+    specs.forEach(s => {
+      const pre = new Image();
+      pre.src = s.open;
+      const pre2 = new Image();
+      pre2.src = s.closed;
+    });
+
+    const layers = specs.map(s => ensureEndingBlinkStack(s.slot, s.open, s.closed)).filter(Boolean);
+
+    requestAnimationFrame(() => {
+      layers.forEach((layer, i) => {
+        const { every, startDelay } = specs[i];
+        const blinkOnce = () => {
+          layer.slot.classList.add('is-blinking');
+          const backId = setTimeout(() => {
+            layer.slot.classList.remove('is-blinking');
+          }, BLINK_HOLD);
+          blinkTimeouts.push(backId);
+        };
+        const startId = setTimeout(() => {
+          blinkOnce();
+          const intervalId = setInterval(blinkOnce, every);
+          blinkIntervals.push(intervalId);
+        }, startDelay);
+        blinkTimeouts.push(startId);
+      });
+    });
+  }
+
+  // 어두운교실: 놀란 유아 눈 깜빡임
+  function startSurprisedBlinks() {
+    startKidBlinks([
+      {
+        slot: childFat,
+        open: KID_SURPRISED.fat,
+        closed: KID_SURPRISED_BLINK.fat,
+        every: 3000,
+        startDelay: 400
+      },
+      {
+        slot: childToy,
+        open: KID_SURPRISED.toy,
+        closed: KID_SURPRISED_BLINK.toy,
+        every: 4000,
+        startDelay: 1100
+      },
+      {
+        slot: childSick,
+        open: KID_SURPRISED.sick,
+        closed: KID_SURPRISED_BLINK.sick,
+        every: 3700,
+        startDelay: 1800
+      }
+    ]);
+  }
+
+  // 밝은교실: 변화 유아 눈 깜빡임
+  function startEndingBlinks() {
+    startKidBlinks([
+      {
+        slot: childFat,
+        open: KID_CHANGED.fat,
+        closed: KID_CHANGED_BLINK.fat,
+        every: 3000,
+        startDelay: 900
+      },
+      {
+        slot: childToy,
+        open: KID_CHANGED.toy,
+        closed: KID_CHANGED_BLINK.toy,
+        every: 4000,
+        startDelay: 1600
+      },
+      {
+        slot: childSick,
+        open: KID_CHANGED.sick,
+        closed: KID_CHANGED_BLINK.sick,
+        every: 3700,
+        startDelay: 2300
+      }
+    ]);
   }
 
   let confettiTimer = null;
@@ -1107,42 +1702,43 @@
   }
 
   function playEndingFinale(onDone) {
-    playSingleAudio("sound/영양미션완성.mp3", onDone);
+    // overlap: 상장 차임/박수를 끊지 않고 대사와 자연스럽게 겹침
+    playBuffer("sound/영양미션완성.mp3", onDone, { volume: 1, overlap: true });
   }
 
   function expandLastMissionAndRevealEnding(onDone) {
-    // 미션7이 이미 전체화면 — 잠시 유지 후 화이트아웃
+    // 미션7 전체화면 유지 — 화이트 없이 아래에서 엔딩 준비 후 페이드 전환
     missionOverlay.classList.add('expanding');
     missionCard.classList.add('expand-fill', 'show');
     missionCard.classList.remove('grow-from-tiny');
+    whiteoutEl.classList.remove('active', 'reveal');
 
-    // 화이트아웃
-    later(700, () => {
-      whiteoutEl.classList.remove('reveal');
-      whiteoutEl.classList.add('active');
+    // 미션7이 화면을 덮은 채로 밝은교실·캐릭터를 미리 깔아 둠
+    later(400, () => {
+      applyEndingCast();
     });
 
-    // 완전 화이트에서 밝은교실 + 캐릭터 준비
-    later(2400, () => {
-      applyEndingCast();
-      missionOverlay.classList.remove('active', 'expanding');
+    // 미션 오버레이를 서서히 걷어 마지막 장면 노출
+    later(900, () => {
+      missionOverlay.classList.add('fade-to-ending');
+      ensureConfetti();
+    });
+
+    // 페이드 중 상장 시작(0.7초 앞당김) → 세 번째 후 대사+박수
+    later(2100, () => {
+      missionOverlay.classList.remove('active', 'expanding', 'fade-to-ending', 'dimmed');
       missionCard.classList.remove('show', 'expand-fill', 'grow-from-tiny');
       missionImage.removeAttribute('src');
-    });
 
-    // 화이트가 걷히며 밝은교실 + Ascending + 박수(배경 5초)
-    later(2800, () => {
-      whiteoutEl.classList.add('reveal');
-      whiteoutEl.classList.remove('active');
-      ensureConfetti();
-      playBuffer("sound/Ascending 3.mp3", null, { volume: 0.7, overlap: true });
-      playBuffer("sound/sfx/applause.mp3", null, { volume: 0.5, loop: true, overlap: true });
-      later(5000, () => stopLoopingAudio());
-    });
-
-    later(4600, () => {
-      whiteoutEl.classList.remove('reveal');
-      playEndingFinale(onDone);
+      spawnNutritionAwards(() => {
+        playNaturalApplause({
+          totalMs: 15000,
+          fadeMs: 5000,
+          fadeInMs: 1500,
+          volume: 0.28
+        });
+        playEndingFinale(onDone);
+      });
     });
   }
 
@@ -1156,9 +1752,10 @@
       return;
     }
 
+    // 먼저 투명 오버레이만 켠 뒤, 미션1과 함께 배경이 어두워지도록
+    missionOverlay.classList.remove('dimmed', 'expanding', 'fade-to-ending');
     missionOverlay.classList.add('active');
-    missionCard.classList.remove('show', 'expand-fill');
-    missionOverlay.classList.remove('expanding');
+    missionCard.classList.remove('show', 'expand-fill', 'grow-from-tiny');
     whiteoutEl.classList.remove('active');
 
     let i = 0;
@@ -1171,7 +1768,7 @@
         } else {
           missionCard.classList.remove('show');
           later(400, () => {
-            missionOverlay.classList.remove('active');
+            missionOverlay.classList.remove('active', 'dimmed');
             missionImage.removeAttribute('src');
             onDone();
           });
@@ -1181,6 +1778,7 @@
 
       const src = images[i];
       const isLast = i === images.length - 1;
+      const isFirst = i === 0;
 
       // 미션1~6만 카드 전환, 미션7은 작은 크기에서 확대
       if (!isLast) {
@@ -1188,16 +1786,17 @@
         missionOverlay.classList.remove('expanding');
       }
 
-      later(isLast ? 80 : 180, () => {
+      later(isLast ? 80 : (isFirst ? 40 : 180), () => {
         missionImage.src = src;
         const reveal = () => {
           if (isLast && step.endingFinale) {
-            // 미션7: 아주 작게 등장 → 화면 전체로 커짐
+            // 미션7: 아주 작게 등장 → 화면 전체로 커짐 + Glow
             missionOverlay.classList.add('expanding');
+            missionOverlay.classList.remove('dimmed');
             missionCard.classList.remove('expand-fill');
             missionCard.classList.add('grow-from-tiny', 'show');
             startConfetti(true);
-            playBuffer("sound/sfx/applause.mp3", null, { volume: 0.75, overlap: true });
+            playBuffer("sound/Ascending 3.mp3", null, { volume: 0.7, overlap: true });
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 missionCard.classList.remove('grow-from-tiny');
@@ -1205,12 +1804,18 @@
               });
             });
           } else {
+            // 미션1: 카드와 함께 화면이 자연스럽게 어두워짐
+            if (isFirst) {
+              requestAnimationFrame(() => {
+                missionOverlay.classList.add('dimmed');
+              });
+            }
             missionCard.classList.add('show');
             playMissionSfx(sfxSrc);
           }
 
           i += 1;
-          later(isLast && step.endingFinale ? Math.max(hold, 1500) : hold, showNext);
+          later(isLast && step.endingFinale ? Math.max(hold, 3200) : hold, showNext);
         };
 
         if (missionImage.complete) {
@@ -1230,7 +1835,9 @@
 
     images.forEach(src => { const img = new Image(); img.src = src; });
     Object.values(KID_CHANGED).forEach(src => { const img = new Image(); img.src = src; });
+    Object.values(KID_CHANGED_BLINK).forEach(src => { const img = new Image(); img.src = src; });
     Object.values(KID_SURPRISED).forEach(src => { const img = new Image(); img.src = src; });
+    Object.values(KID_SURPRISED_BLINK).forEach(src => { const img = new Image(); img.src = src; });
     const lightBg = new Image();
     lightBg.src = BG_LIGHT;
 
@@ -1247,6 +1854,94 @@
         window.AppInventor.setWebViewString("IntroFinished");
       }
     }, 1500);
+    // 마지막 대사 종료 후 5초 → 다시보기
+    setTimeout(() => {
+      showReplayButton();
+    }, 5000);
+  }
+
+  function showReplayButton() {
+    const replayBtn = document.getElementById('replay-btn');
+    if (!replayBtn) return;
+    replayBtn.classList.remove('hidden');
+    replayBtn.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideReplayButton() {
+    const replayBtn = document.getElementById('replay-btn');
+    if (!replayBtn) return;
+    replayBtn.classList.add('hidden');
+    replayBtn.setAttribute('aria-hidden', 'true');
+  }
+
+  function stopConfetti() {
+    if (confettiTimer) {
+      clearInterval(confettiTimer);
+      confettiTimer = null;
+    }
+    if (confettiEl) {
+      confettiEl.innerHTML = '';
+      confettiEl.style.display = 'none';
+      confettiEl.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function unwrapEndingBlink(slot) {
+    slot.classList.remove('ending-blink', 'is-blinking', 'award-happy');
+    const stack = slot.querySelector('.char-stack');
+    if (!stack) return;
+    const openImg = stack.querySelector('.character');
+    if (openImg) {
+      slot.insertBefore(openImg, stack);
+    }
+    stack.remove();
+  }
+
+  function resetStoryForReplay() {
+    hideReplayButton();
+    clearTimers();
+    stopAllAudio();
+    stopLoopingAudio();
+    clearNutritionAwards();
+    stopEndingBlinks();
+    stopConfetti();
+    clearSpeaking();
+
+    missionOverlay.classList.remove('active', 'dimmed', 'expanding', 'fade-to-ending');
+    missionCard.classList.remove('show', 'expand-fill', 'grow-from-tiny');
+    missionImage.removeAttribute('src');
+    whiteoutEl.classList.remove('active', 'reveal');
+    flash.classList.remove('flash-active');
+
+    kids.forEach(unwrapEndingBlink);
+    const kidDefaults = [
+      [childFat, "image/뚱뚱유아.png" + LIP_CACHE],
+      [childToy, "image/장난감유아.png" + LIP_CACHE],
+      [childSick, "image/배아픈유아.png" + LIP_CACHE]
+    ];
+    kidDefaults.forEach(([slot, src]) => {
+      slot.classList.add('visible');
+      slot.classList.remove('speaking', 'step-forward', 'walking');
+      const img = slot.querySelector('.character');
+      if (img) img.src = src;
+    });
+
+    heroes.forEach(hero => {
+      hero.classList.remove(
+        'visible', 'speaking', 'step-forward', 'walking',
+        'pre-appear', 'appearing', 'ending-bounce'
+      );
+      hero.querySelectorAll('.sparkle-burst').forEach(el => el.remove());
+      const img = hero.querySelector('.character');
+      if (img) {
+        if (hero === heroHealthy) img.src = "image/헬씨.png" + LIP_CACHE;
+        if (hero === heroEti) img.src = "image/에티.png" + LIP_CACHE;
+        if (hero === heroSafey) img.src = "image/세이피.png" + LIP_CACHE;
+      }
+    });
+
+    currentBg = BG_DARK;
+    stage.style.backgroundImage = `url('${BG_DARK}')`;
   }
 
   function playSingleAudio(src, onDone) {
@@ -1336,27 +2031,12 @@
   }
 
   function setKidsSurprised() {
-    const pairs = [
-      [childFat, KID_SURPRISED.fat],
-      [childToy, KID_SURPRISED.toy],
-      [childSick, KID_SURPRISED.sick]
-    ];
-    pairs.forEach(([slot, src]) => {
-      const img = slot.querySelector('.character');
-      if (!img) return;
-      img.style.transition = 'opacity 0.28s ease';
-      img.style.opacity = '0.4';
-      later(160, () => {
-        img.src = src;
-        later(40, () => {
-          img.style.opacity = '1';
-        });
-      });
-    });
+    // 놀란 표정으로 바꾼 뒤 눈 깜빡임 시작
+    startSurprisedBlinks();
   }
 
   function appearHeroesWithSparkles(heroList) {
-    // 히어로 등장 후 약 1초 뒤 유아 → 놀란 표정
+    // 히어로 등장 후 약 1초 뒤 유아 → 놀란 표정(+깜빡임)
     later(1000, () => setKidsSurprised());
 
     // 1) 반짝임이 캐릭터 자리를 먼저 덮음
@@ -1385,17 +2065,16 @@
     });
   }
 
-  // 점프하며 나오기 → 오디오(+입모양) → 점프하며 들어가기
+  // 점프하며 나오기 → 오디오(+입모양) → 앞에 그대로 유지
   function playHeroWalk(hero, audioSrc, onDone, lipOpts) {
     clearSpeaking();
-    heroes.forEach(h => h.classList.remove('step-forward', 'walking'));
+    heroes.forEach(h => h.classList.remove('walking'));
 
-    // 점프 정점에서 위치 이동 → 착지 (미끄러짐 방지)
     hero.classList.add('walking');
-    later(220, () => {
+    later(160, () => {
       hero.classList.add('step-forward');
     });
-    later(700, () => {
+    later(520, () => {
       hero.classList.remove('walking');
 
       if (lipOpts && lipOpts.frames) {
@@ -1412,15 +2091,7 @@
         if (lipOpts && lipOpts.frames) {
           stopLipSync(hero, lipOpts.reset || lipOpts.frames[0]);
         }
-        // 점프 정점에서 제자리로
-        hero.classList.add('walking');
-        later(220, () => {
-          hero.classList.remove('step-forward');
-        });
-        later(700, () => {
-          hero.classList.remove('walking');
-          onDone();
-        });
+        onDone();
       });
     });
   }
@@ -1534,7 +2205,7 @@
     const hold = step.holdBeforeMove ?? 0;
     const moveWait = step.moveBeforeAudio ?? 0;
 
-    // 유아: 나란히 대기 → 앞으로 → 대사 (+ 입모양 전환)
+    // 유아: 제자리 대기 → 대사 (+ 입모양, 몸 흔들림만)
     later(hold, () => {
       setSpeaking(step);
       later(moveWait, () => {
@@ -1560,6 +2231,7 @@
   // 시작 버튼: 터치로 오디오 잠금 해제 후 스토리 시작
   const startGate = document.getElementById('start-gate');
   const startBtn = document.getElementById('start-btn');
+  const replayBtn = document.getElementById('replay-btn');
 
   function unlockAudioThenStart() {
     if (startGate) {
@@ -1581,6 +2253,20 @@
       .catch(() => playStep(0));
   }
 
+  function onReplayClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (replayBtn.dataset.busy === '1') return;
+    replayBtn.dataset.busy = '1';
+    resetStoryForReplay();
+    unlockAudioContext()
+      .then(() => playStep(0))
+      .catch(() => playStep(0))
+      .finally(() => {
+        setTimeout(() => { replayBtn.dataset.busy = '0'; }, 800);
+      });
+  }
+
   if (startBtn) {
     const onStart = (e) => {
       e.preventDefault();
@@ -1597,6 +2283,10 @@
     startGate.addEventListener('click', unlockAudioThenStart, { once: true });
   } else {
     playStep(0);
+  }
+
+  if (replayBtn) {
+    replayBtn.addEventListener('pointerup', onReplayClick);
   }
 </script>
 </body>
